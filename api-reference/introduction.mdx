@@ -1,33 +1,607 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: "API Introduction"
+description: "RESTful API for programmatic access to VulnZap security scanning"
+icon: "code"
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## Overview
 
-## Welcome
+The VulnZap API provides programmatic access to all platform features, enabling custom integrations, automation, and workflow customization.
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+**Base URL:** `https://api.vulnzap.com/v1`
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
+<Card title="Need an API Key?" icon="key" href="https://vulnzap.com/dashboard/settings/api-keys">
+  Generate your API key in the dashboard
 </Card>
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+All API requests require authentication via API key in the Authorization header:
+
+```bash
+curl https://api.vulnzap.com/v1/scans \
+  -H "Authorization: Bearer vzap_your_api_key_here"
+```
+
+### API Key Types
+
+<Tabs>
+  <Tab title="Personal API Key">
+    **Scope:** Limited to your projects and permissions
+    
+    **Create:**
+    ```bash
+    vulnzap auth
+    ```
+    
+    **Best for:** Developer workstations, personal automation
+  </Tab>
+  
+  <Tab title="Team API Key">
+    **Scope:** Team-wide access (Admin/Owner only)
+    
+    **Create:**
+    ```
+    Dashboard → Settings → API Keys → Create Team Key
+    ```
+    
+    **Best for:** CI/CD pipelines, shared services
+  </Tab>
+</Tabs>
+
+## Rate Limits
+
+Rate limits vary by plan:
+
+| Plan | Requests/Minute | Requests/Hour | Requests/Day |
+|------|-----------------|---------------|--------------|
+| Free | 10 | 100 | 1,000 |
+| Standard | 60 | 1,000 | 10,000 |
+| Scale | 300 | 5,000 | 50,000 |
+| Enterprise | Custom | Custom | Custom |
+
+### Rate Limit Headers
+
+Every response includes rate limit information:
+
+```http
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 45
+X-RateLimit-Reset: 1698765432
+```
+
+### Handling Rate Limits
+
+When rate limit is exceeded:
+
+```http
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+
+{
+  "error": "rate_limit_exceeded",
+  "message": "Rate limit exceeded. Retry after 42 seconds.",
+  "retry_after": 42
+}
+```
+
+**Best Practice:** Implement exponential backoff:
+
+```javascript
+async function callAPIWithRetry(url, options, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    const response = await fetch(url, options);
+    
+    if (response.status === 429) {
+      const retryAfter = response.headers.get('Retry-After') || Math.pow(2, i);
+      await sleep(retryAfter * 1000);
+      continue;
+    }
+    
+    return response;
+  }
+  
+  throw new Error('Max retries exceeded');
+}
+```
+
+## Request Format
+
+### Standard Request
+
+```http
+POST /v1/scans HTTP/1.1
+Host: api.vulnzap.com
+Authorization: Bearer vzap_abc123...
+Content-Type: application/json
+
+{
+  "project_id": "proj_xyz789",
+  "files": ["src/auth.js", "src/db/queries.ts"]
+}
+```
+
+### Content Types
+
+- **Request:** `application/json`
+- **Response:** `application/json`
+- **Errors:** `application/json`
+
+## Response Format
+
+### Success Response
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
+{
+  "success": true,
+  "data": {
+    "scan_id": "scan_abc123",
+    "status": "completed",
+    "findings_count": 5
   }
-]
+}
 ```
+
+### Error Response
+
+```json
+{
+  "error": "validation_error",
+  "message": "Invalid project_id",
+  "details": {
+    "field": "project_id",
+    "issue": "Project not found"
+  }
+}
+```
+
+## Error Codes
+
+| HTTP Status | Error Code | Description |
+|-------------|------------|-------------|
+| 400 | `validation_error` | Invalid request parameters |
+| 401 | `authentication_required` | Missing or invalid API key |
+| 403 | `permission_denied` | Insufficient permissions |
+| 404 | `not_found` | Resource not found |
+| 409 | `conflict` | Resource conflict (e.g., duplicate scan) |
+| 422 | `unprocessable_entity` | Validation failed |
+| 429 | `rate_limit_exceeded` | Too many requests |
+| 500 | `internal_server_error` | Server error |
+| 503 | `service_unavailable` | Temporary service disruption |
+
+## Pagination
+
+For list endpoints, results are paginated:
+
+### Request
+
+```http
+GET /v1/findings?page=2&per_page=50
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "data": [...],
+  "pagination": {
+    "page": 2,
+    "per_page": 50,
+    "total_pages": 10,
+    "total_count": 487,
+    "has_next": true,
+    "has_prev": true
+  },
+  "links": {
+    "first": "/v1/findings?page=1&per_page=50",
+    "prev": "/v1/findings?page=1&per_page=50",
+    "next": "/v1/findings?page=3&per_page=50",
+    "last": "/v1/findings?page=10&per_page=50"
+  }
+}
+```
+
+## Filtering and Sorting
+
+### Filtering
+
+```http
+GET /v1/findings?severity=critical&status=open&project_id=proj_123
+```
+
+**Common Filters:**
+- `severity`: critical, high, medium, low
+- `status`: open, fixed, false_positive, ignored
+- `type`: sql_injection, xss, path_traversal, etc.
+- `project_id`: Filter by specific project
+- `since`: ISO 8601 date (e.g., `2025-01-01T00:00:00Z`)
+
+### Sorting
+
+```http
+GET /v1/findings?sort_by=severity&order=desc
+```
+
+**Sort Fields:**
+- `created_at`: Creation date
+- `severity`: Severity level
+- `risk_score`: Exploitability score
+- `file_path`: File path alphabetically
+
+**Sort Order:**
+- `asc`: Ascending
+- `desc`: Descending
+
+## Webhooks
+
+Subscribe to events with webhooks:
+
+### Setting Up Webhooks
+
+```http
+POST /v1/webhooks
+Content-Type: application/json
+
+{
+  "url": "https://your-domain.com/webhooks/vulnzap",
+  "events": ["finding.created", "scan.completed"],
+  "secret": "your_webhook_secret"
+}
+```
+
+### Event Types
+
+| Event | Description |
+|-------|-------------|
+| `finding.created` | New vulnerability found |
+| `finding.fixed` | Vulnerability marked as fixed |
+| `scan.started` | Scan initiated |
+| `scan.completed` | Scan finished |
+| `scan.failed` | Scan failed |
+| `project.created` | New project added |
+
+### Webhook Payload
+
+```json
+{
+  "event": "finding.created",
+  "timestamp": "2025-10-19T14:32:11Z",
+  "data": {
+    "finding_id": "finding_abc123",
+    "severity": "critical",
+    "type": "sql_injection",
+    "project_id": "proj_xyz789",
+    "file": "src/db/queries.ts",
+    "line": 45
+  }
+}
+```
+
+### Verifying Webhooks
+
+Verify webhook signature:
+
+```javascript
+const crypto = require('crypto');
+
+function verifyWebhook(payload, signature, secret) {
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(JSON.stringify(payload))
+    .digest('hex');
+  
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature)
+  );
+}
+
+app.post('/webhooks/vulnzap', (req, res) => {
+  const signature = req.headers['x-vulnzap-signature'];
+  
+  if (!verifyWebhook(req.body, signature, process.env.WEBHOOK_SECRET)) {
+    return res.status(401).send('Invalid signature');
+  }
+  
+  // Process webhook
+  res.sendStatus(200);
+});
+```
+
+## Idempotency
+
+For safe retries, use idempotency keys:
+
+```http
+POST /v1/scans
+Idempotency-Key: unique-key-123
+Content-Type: application/json
+
+{
+  "project_id": "proj_xyz789"
+}
+```
+
+**Behavior:**
+- First request: Executes normally
+- Retry with same key: Returns cached result (no duplicate scan)
+- Keys expire after 24 hours
+
+## API Versioning
+
+Current API version: **v1**
+
+### Version Header
+
+```http
+GET /v1/scans
+Accept: application/vnd.vulnzap.v1+json
+```
+
+### Deprecation Notice
+
+When endpoints are deprecated:
+
+```http
+Deprecation: true
+Sunset: Sun, 01 Jan 2026 00:00:00 GMT
+```
+
+**Migration period:** Minimum 6 months notice
+
+## Client Libraries
+
+### Official SDKs
+
+<Tabs>
+  <Tab title="Node.js">
+    ```bash
+    npm install @vulnzap/sdk
+    ```
+    
+    ```javascript
+    const VulnZap = require('@vulnzap/sdk');
+    
+    const client = new VulnZap({
+      apiKey: process.env.VULNZAP_API_KEY
+    });
+    
+    const scan = await client.scans.create({
+      projectId: 'proj_xyz789',
+      files: ['src/auth.js']
+    });
+    
+    console.log(scan.findings);
+    ```
+  </Tab>
+  
+  <Tab title="Python">
+    ```bash
+    pip install vulnzap
+    ```
+    
+    ```python
+    from vulnzap import VulnZap
+    
+    client = VulnZap(api_key=os.environ['VULNZAP_API_KEY'])
+    
+    scan = client.scans.create(
+        project_id='proj_xyz789',
+        files=['src/auth.py']
+    )
+    
+    print(scan.findings)
+    ```
+  </Tab>
+  
+  <Tab title="Go">
+    ```bash
+    go get github.com/vulnzap/vulnzap-go
+    ```
+    
+    ```go
+    package main
+    
+    import (
+        "github.com/vulnzap/vulnzap-go"
+    )
+    
+    func main() {
+        client := vulnzap.NewClient(os.Getenv("VULNZAP_API_KEY"))
+        
+        scan, err := client.Scans.Create(&vulnzap.ScanRequest{
+            ProjectID: "proj_xyz789",
+            Files: []string{"src/auth.go"},
+        })
+        
+        fmt.Println(scan.Findings)
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Ruby">
+    ```bash
+    gem install vulnzap
+    ```
+    
+    ```ruby
+    require 'vulnzap'
+    
+    client = VulnZap::Client.new(
+      api_key: ENV['VULNZAP_API_KEY']
+    )
+    
+    scan = client.scans.create(
+      project_id: 'proj_xyz789',
+      files: ['src/auth.rb']
+    )
+    
+    puts scan.findings
+    ```
+  </Tab>
+</Tabs>
+
+## Code Examples
+
+### Trigger a Scan
+
+```bash
+curl -X POST https://api.vulnzap.com/v1/scans \
+  -H "Authorization: Bearer vzap_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project_id": "proj_xyz789",
+    "files": ["src/auth.js", "src/db/queries.ts"]
+  }'
+```
+
+### Get Scan Results
+
+```bash
+curl https://api.vulnzap.com/v1/scans/scan_abc123 \
+  -H "Authorization: Bearer vzap_abc123..."
+```
+
+### List Findings
+
+```bash
+curl "https://api.vulnzap.com/v1/findings?severity=critical&status=open" \
+  -H "Authorization: Bearer vzap_abc123..."
+```
+
+### Apply Fix
+
+```bash
+curl -X POST https://api.vulnzap.com/v1/findings/finding_abc123/fix \
+  -H "Authorization: Bearer vzap_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{"auto_apply": true}'
+```
+
+## API Endpoints
+
+Complete endpoint documentation:
+
+<CardGroup cols={2}>
+  <Card title="Scans" icon="magnifying-glass" href="/api-reference/endpoint/scan">
+    Create and manage security scans
+  </Card>
+  <Card title="Findings" icon="triangle-exclamation" href="/api-reference/endpoint/findings">
+    Retrieve and manage vulnerabilities
+  </Card>
+  <Card title="Projects" icon="folder" href="/api-reference/endpoint/projects">
+    Manage projects and repositories
+  </Card>
+  <Card title="Patches" icon="code-merge" href="/api-reference/endpoint/patches">
+    Generate and apply security fixes
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Environment Variables for API Keys">
+    ```bash
+    export VULNZAP_API_KEY="vzap_abc123..."
+    ```
+    
+    Never hardcode API keys in source code.
+  </Accordion>
+  
+  <Accordion title="Implement Exponential Backoff">
+    ```javascript
+    async function retryWithBackoff(fn, maxRetries = 3) {
+      for (let i = 0; i < maxRetries; i++) {
+        try {
+          return await fn();
+        } catch (error) {
+          if (i === maxRetries - 1) throw error;
+          await sleep(Math.pow(2, i) * 1000);
+        }
+      }
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Use Pagination for Large Datasets">
+    ```javascript
+    async function getAllFindings() {
+      let allFindings = [];
+      let page = 1;
+      let hasNext = true;
+      
+      while (hasNext) {
+        const response = await fetch(
+          `https://api.vulnzap.com/v1/findings?page=${page}`
+        );
+        const data = await response.json();
+        
+        allFindings.push(...data.data);
+        hasNext = data.pagination.has_next;
+        page++;
+      }
+      
+      return allFindings;
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Use Webhooks Instead of Polling">
+    For real-time updates, set up webhooks rather than polling the API.
+  </Accordion>
+  
+  <Accordion title="Cache Responses">
+    Cache responses where appropriate to reduce API calls:
+    
+    ```javascript
+    const NodeCache = require('node-cache');
+    const cache = new NodeCache({ stdTTL: 600 }); // 10 min cache
+    
+    async function getProject(id) {
+      const cached = cache.get(`project:${id}`);
+      if (cached) return cached;
+      
+      const project = await api.projects.get(id);
+      cache.set(`project:${id}`, project);
+      return project;
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Scan Endpoint"
+    icon="magnifying-glass"
+    href="/api-reference/endpoint/scan"
+  >
+    Create and manage scans
+  </Card>
+  
+  <Card
+    title="Findings Endpoint"
+    icon="bug"
+    href="/api-reference/endpoint/findings"
+  >
+    Retrieve vulnerabilities
+  </Card>
+  
+  <Card
+    title="Authentication"
+    icon="key"
+    href="/api-reference/authentication"
+  >
+    API key management
+  </Card>
+  
+  <Card
+    title="CLI Reference"
+    icon="terminal"
+    href="/integration/cli"
+  >
+    Command-line interface
+  </Card>
+</CardGroup>

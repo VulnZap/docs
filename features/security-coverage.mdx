@@ -1,0 +1,807 @@
+---
+title: "Security Coverage"
+description: "Complete guide to vulnerabilities detected by VulnZap with OWASP alignment"
+icon: "shield-check"
+---
+
+## Overview
+
+VulnZap detects vulnerabilities aligned with the OWASP Top 10 2021 and CWE/SANS Top 25, providing comprehensive coverage of the most critical security risks.
+
+## OWASP Top 10 Coverage
+
+### A01:2021 – Broken Access Control
+
+<AccordionGroup>
+  <Accordion title="Path Traversal (CWE-22)">
+    **What it is:**  
+    Attackers manipulate file paths to access files outside intended directories.
+    
+    **Vulnerable Pattern:**
+    ```javascript
+    app.get('/files/:filename', (req, res) => {
+      const file = `./uploads/${req.params.filename}`;
+      res.sendFile(file); // ❌ Path traversal
+    });
+    ```
+    
+    **Attack Example:**
+    ```
+    GET /files/../../../../etc/passwd
+    ```
+    
+    **VulnZap Fix:**
+    ```javascript
+    const path = require('path');
+    app.get('/files/:filename', (req, res) => {
+      const safePath = path.join('./uploads', 
+        path.basename(req.params.filename));
+      res.sendFile(safePath); // ✅ Normalized path
+    });
+    ```
+  </Accordion>
+  
+  <Accordion title="Insecure Direct Object References (IDOR)">
+    **What it is:**  
+    Missing authorization checks allow users to access resources belonging to others.
+    
+    **Vulnerable Pattern:**
+    ```python
+    @app.route('/users/<user_id>')
+    def get_user(user_id):
+        user = User.query.get(user_id)
+        return jsonify(user.to_dict())  # ❌ No ownership check
+    ```
+    
+    **VulnZap Fix:**
+    ```python
+    @app.route('/users/<user_id>')
+    @login_required
+    def get_user(user_id):
+        user = User.query.get(user_id)
+        if user.id != current_user.id and not current_user.is_admin:
+            abort(403)  # ✅ Authorization check
+        return jsonify(user.to_dict())
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### A02:2021 – Cryptographic Failures
+
+<AccordionGroup>
+  <Accordion title="Weak Cryptography (CWE-327)">
+    **What it is:**  
+    Use of broken or weak cryptographic algorithms.
+    
+    **Vulnerable Pattern:**
+    ```javascript
+    const crypto = require('crypto');
+    const hash = crypto.createHash('md5')
+      .update(password)
+      .digest('hex'); // ❌ MD5 is cryptographically broken
+    ```
+    
+    **VulnZap Fix:**
+    ```javascript
+    const bcrypt = require('bcrypt');
+    const hash = await bcrypt.hash(password, 12); // ✅ Strong hashing
+    ```
+  </Accordion>
+  
+  <Accordion title="Hardcoded Secrets (CWE-798)">
+    **What it is:**  
+    Sensitive credentials embedded in source code.
+    
+    **Vulnerable Pattern:**
+    ```python
+    DATABASE_URL = "postgresql://admin:SuperSecret123@db.example.com/prod"
+    AWS_SECRET_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+    ```
+    
+    **VulnZap Fix:**
+    ```python
+    import os
+    DATABASE_URL = os.environ.get('DATABASE_URL')
+    AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
+    ```
+  </Accordion>
+  
+  <Accordion title="Insecure Data Transmission (CWE-319)">
+    **What it is:**  
+    Sensitive data transmitted without encryption.
+    
+    **Vulnerable Pattern:**
+    ```javascript
+    app.use((req, res, next) => {
+      res.cookie('sessionId', req.sessionID); // ❌ No secure flag
+      next();
+    });
+    ```
+    
+    **VulnZap Fix:**
+    ```javascript
+    app.use((req, res, next) => {
+      res.cookie('sessionId', req.sessionID, {
+        secure: true,    // ✅ HTTPS only
+        httpOnly: true,  // ✅ No JavaScript access
+        sameSite: 'strict' // ✅ CSRF protection
+      });
+      next();
+    });
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### A03:2021 – Injection
+
+<AccordionGroup>
+  <Accordion title="SQL Injection (CWE-89)">
+    **What it is:**  
+    Untrusted data sent to SQL interpreter without validation.
+    
+    **Vulnerable Pattern:**
+    ```typescript
+    const getUserById = (id: string) => {
+      const query = `SELECT * FROM users WHERE id = ${id}`;
+      return db.execute(query); // ❌ String concatenation
+    };
+    ```
+    
+    **Attack Example:**
+    ```sql
+    1' OR '1'='1' --
+    Resulting query: SELECT * FROM users WHERE id = 1' OR '1'='1' --
+    Returns all users!
+    ```
+    
+    **VulnZap Fix:**
+    ```typescript
+    const getUserById = (id: string) => {
+      const query = 'SELECT * FROM users WHERE id = ?';
+      return db.execute(query, [id]); // ✅ Parameterized query
+    };
+    ```
+  </Accordion>
+  
+  <Accordion title="Command Injection (CWE-78)">
+    **What it is:**  
+    Untrusted data passed to system shell commands.
+    
+    **Vulnerable Pattern:**
+    ```python
+    import subprocess
+    
+    def ping_host(host):
+        cmd = f"ping -c 1 {host}"
+        subprocess.run(cmd, shell=True)  # ❌ Shell injection
+    ```
+    
+    **Attack Example:**
+    ```
+    host = "example.com; rm -rf /"
+    ```
+    
+    **VulnZap Fix:**
+    ```python
+    import subprocess
+    import shlex
+    
+    def ping_host(host):
+        cmd = ["ping", "-c", "1", host]
+        subprocess.run(cmd)  # ✅ No shell, argument array
+    ```
+  </Accordion>
+  
+  <Accordion title="NoSQL Injection (CWE-943)">
+    **What it is:**  
+    Injection attacks targeting NoSQL databases.
+    
+    **Vulnerable Pattern:**
+    ```javascript
+    app.post('/login', (req, res) => {
+      const { username, password } = req.body;
+      db.users.findOne({
+        username: username,
+        password: password  // ❌ Object injection
+      });
+    });
+    ```
+    
+    **Attack Example:**
+    ```json
+    {
+      "username": {"$ne": null},
+      "password": {"$ne": null}
+    }
+    ```
+    
+    **VulnZap Fix:**
+    ```javascript
+    app.post('/login', (req, res) => {
+      const username = String(req.body.username);
+      const password = String(req.body.password);
+      db.users.findOne({
+        username: username,  // ✅ Forced to string
+        passwordHash: hashPassword(password)
+      });
+    });
+    ```
+  </Accordion>
+  
+  <Accordion title="LDAP Injection (CWE-90)">
+    **What it is:**  
+    Untrusted data in LDAP queries.
+    
+    **Vulnerable Pattern:**
+    ```python
+    search_filter = f"(uid={username})"  # ❌ String interpolation
+    ldap_conn.search(base_dn, search_filter)
+    ```
+    
+    **VulnZap Fix:**
+    ```python
+    from ldap3 import escape_filter_chars
+    
+    safe_username = escape_filter_chars(username)
+    search_filter = f"(uid={safe_username})"  # ✅ Escaped
+    ldap_conn.search(base_dn, search_filter)
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### A03:2021 – Injection (Continued)
+
+<AccordionGroup>
+  <Accordion title="Cross-Site Scripting (XSS) - Reflected (CWE-79)">
+    **What it is:**  
+    Untrusted data included in HTML response without proper escaping.
+    
+    **Vulnerable Pattern:**
+    ```javascript
+    app.get('/search', (req, res) => {
+      const query = req.query.q;
+      res.send(`<h1>Results for: ${query}</h1>`); // ❌ XSS
+    });
+    ```
+    
+    **Attack Example:**
+    ```
+    /search?q=<script>alert(document.cookie)</script>
+    ```
+    
+    **VulnZap Fix:**
+    ```javascript
+    const escapeHtml = require('escape-html');
+    
+    app.get('/search', (req, res) => {
+      const query = escapeHtml(req.query.q);
+      res.send(`<h1>Results for: ${query}</h1>`); // ✅ Escaped
+    });
+    ```
+  </Accordion>
+  
+  <Accordion title="Cross-Site Scripting (XSS) - Stored (CWE-79)">
+    **What it is:**  
+    Malicious scripts stored in database and displayed to users.
+    
+    **Vulnerable Pattern:**
+    ```javascript
+    // Storing comment
+    await db.comments.insert({ text: req.body.comment });
+    
+    // Displaying comments
+    res.render('post', { 
+      comments: comments.map(c => c.text) // ❌ No sanitization
+    });
+    ```
+    
+    **VulnZap Fix:**
+    ```javascript
+    const DOMPurify = require('isomorphic-dompurify');
+    
+    // Store sanitized
+    const clean = DOMPurify.sanitize(req.body.comment);
+    await db.comments.insert({ text: clean });
+    
+    // Display is now safe
+    res.render('post', { comments: comments.map(c => c.text) });
+    ```
+  </Accordion>
+  
+  <Accordion title="Cross-Site Scripting (XSS) - DOM-Based">
+    **What it is:**  
+    Client-side JavaScript writes untrusted data to DOM.
+    
+    **Vulnerable Pattern:**
+    ```javascript
+    const params = new URLSearchParams(window.location.search);
+    document.getElementById('welcome').innerHTML = 
+      `Welcome ${params.get('name')}`; // ❌ DOM XSS
+    ```
+    
+    **VulnZap Fix:**
+    ```javascript
+    const params = new URLSearchParams(window.location.search);
+    document.getElementById('welcome').textContent = 
+      `Welcome ${params.get('name')}`; // ✅ textContent auto-escapes
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### A04:2021 – Insecure Design
+
+<AccordionGroup>
+  <Accordion title="Missing Rate Limiting (CWE-307)">
+    **What it is:**  
+    No protection against brute force or DoS attacks.
+    
+    **Vulnerable Pattern:**
+    ```javascript
+    app.post('/login', async (req, res) => {
+      const user = await authenticate(req.body);
+      // ❌ No rate limiting
+    });
+    ```
+    
+    **VulnZap Fix:**
+    ```javascript
+    const rateLimit = require('express-rate-limit');
+    
+    const loginLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 5 // 5 attempts
+    });
+    
+    app.post('/login', loginLimiter, async (req, res) => {
+      const user = await authenticate(req.body); // ✅ Protected
+    });
+    ```
+  </Accordion>
+  
+  <Accordion title="Missing Input Validation (CWE-20)">
+    **What it is:**  
+    Accepting untrusted input without validation.
+    
+    **Vulnerable Pattern:**
+    ```python
+    @app.route('/transfer', methods=['POST'])
+    def transfer_money():
+        amount = request.json['amount']
+        transfer(current_user, amount)  # ❌ No validation
+    ```
+    
+    **VulnZap Fix:**
+    ```python
+    from decimal import Decimal, InvalidOperation
+    
+    @app.route('/transfer', methods=['POST'])
+    def transfer_money():
+        try:
+            amount = Decimal(request.json['amount'])
+            if amount <= 0 or amount > 10000:
+                return 'Invalid amount', 400
+            transfer(current_user, amount)  # ✅ Validated
+        except (InvalidOperation, KeyError):
+            return 'Invalid request', 400
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### A05:2021 – Security Misconfiguration
+
+<AccordionGroup>
+  <Accordion title="Debug Mode in Production (CWE-489)">
+    **What it is:**  
+    Verbose error messages leak sensitive information.
+    
+    **Vulnerable Pattern:**
+    ```python
+    app = Flask(__name__)
+    app.config['DEBUG'] = True  # ❌ Debug in production
+    app.run()
+    ```
+    
+    **VulnZap Fix:**
+    ```python
+    import os
+    
+    app = Flask(__name__)
+    app.config['DEBUG'] = os.environ.get('ENV') != 'production'
+    app.run()
+    ```
+  </Accordion>
+  
+  <Accordion title="Missing Security Headers (CWE-693)">
+    **What it is:**  
+    HTTP security headers not configured.
+    
+    **Vulnerable Pattern:**
+    ```javascript
+    app.get('/', (req, res) => {
+      res.send('<h1>Hello</h1>'); // ❌ No security headers
+    });
+    ```
+    
+    **VulnZap Fix:**
+    ```javascript
+    const helmet = require('helmet');
+    
+    app.use(helmet()); // ✅ Sets multiple security headers
+    // X-Frame-Options, X-Content-Type-Options, etc.
+    
+    app.get('/', (req, res) => {
+      res.send('<h1>Hello</h1>');
+    });
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### A06:2021 – Vulnerable and Outdated Components
+
+<AccordionGroup>
+  <Accordion title="Known CVEs in Dependencies">
+    **What it is:**  
+    Using packages with known security vulnerabilities.
+    
+    **Detection:**
+    ```bash
+    vulnzap scan --check-dependencies
+    
+    ⚠️  Vulnerable Package Detected
+    
+    Package: lodash@4.17.15
+    Vulnerability: CVE-2020-8203
+    Severity: High
+    Description: Prototype pollution vulnerability
+    Fix: Upgrade to lodash@4.17.21 or later
+    ```
+    
+    **VulnZap Action:**
+    - Blocks installation in IDE
+    - Fails CI/CD if present
+    - Suggests safe alternatives
+  </Accordion>
+  
+  <Accordion title="Malicious Packages">
+    **What it is:**  
+    Typosquatting or intentionally malicious packages.
+    
+    **Detection:**
+    ```bash
+    npm install expres  # Typo: should be "express"
+    
+    🚨 VulnZap Alert: Potential Typosquatting
+    
+    You're installing: expres
+    Did you mean: express?
+    
+    This package:
+    - Has very few downloads
+    - Was published recently
+    - Has suspicious code patterns
+    
+    [Block Installation] [Review Code] [Install Anyway]
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### A07:2021 – Identification and Authentication Failures
+
+<AccordionGroup>
+  <Accordion title="Weak Password Requirements (CWE-521)">
+    **What it is:**  
+    Allowing weak passwords that are easily guessed.
+    
+    **Vulnerable Pattern:**
+    ```javascript
+    if (password.length >= 6) {
+      createUser(username, password); // ❌ Too simple
+    }
+    ```
+    
+    **VulnZap Fix:**
+    ```javascript
+    const passwordValidator = require('password-validator');
+    
+    const schema = new passwordValidator()
+      .is().min(12)
+      .has().uppercase()
+      .has().lowercase()
+      .has().digits()
+      .has().symbols();
+    
+    if (schema.validate(password)) {
+      createUser(username, password); // ✅ Strong requirements
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Insecure Session Management (CWE-384)">
+    **What it is:**  
+    Session tokens predictable or not properly secured.
+    
+    **Vulnerable Pattern:**
+    ```javascript
+    const sessionId = username + Date.now(); // ❌ Predictable
+    res.cookie('session', sessionId);
+    ```
+    
+    **VulnZap Fix:**
+    ```javascript
+    const crypto = require('crypto');
+    
+    const sessionId = crypto.randomBytes(32).toString('hex');
+    res.cookie('session', sessionId, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 3600000 // 1 hour
+    });
+    ```
+  </Accordion>
+  
+  <Accordion title="Missing Multi-Factor Authentication">
+    **What it is:**  
+    Sensitive operations without additional verification.
+    
+    **Vulnerable Pattern:**
+    ```python
+    @app.route('/delete-account', methods=['POST'])
+    @login_required
+    def delete_account():
+        current_user.delete()  # ❌ No MFA for sensitive action
+    ```
+    
+    **VulnZap Fix:**
+    ```python
+    @app.route('/delete-account', methods=['POST'])
+    @login_required
+    @mfa_required  # ✅ Require 2FA
+    def delete_account():
+        current_user.delete()
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### A08:2021 – Software and Data Integrity Failures
+
+<AccordionGroup>
+  <Accordion title="Insecure Deserialization (CWE-502)">
+    **What it is:**  
+    Deserializing untrusted data leads to code execution.
+    
+    **Vulnerable Pattern:**
+    ```python
+    import pickle
+    
+    data = pickle.loads(request.data)  # ❌ Arbitrary code execution
+    ```
+    
+    **VulnZap Fix:**
+    ```python
+    import json
+    
+    try:
+        data = json.loads(request.data)  # ✅ Safe deserialization
+    except json.JSONDecodeError:
+        abort(400)
+    ```
+  </Accordion>
+  
+  <Accordion title="Missing Integrity Checks">
+    **What it is:**  
+    No verification of downloaded files or updates.
+    
+    **Vulnerable Pattern:**
+    ```javascript
+    const response = await fetch('https://cdn.example.com/script.js');
+    const code = await response.text();
+    eval(code);  // ❌ No integrity check
+    ```
+    
+    **VulnZap Fix:**
+    ```html
+    <script 
+      src="https://cdn.example.com/script.js"
+      integrity="sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/ux..."
+      crossorigin="anonymous">
+    </script>
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### A09:2021 – Security Logging and Monitoring Failures
+
+<AccordionGroup>
+  <Accordion title="Insufficient Logging">
+    **What it is:**  
+    Security events not logged for audit trails.
+    
+    **Vulnerable Pattern:**
+    ```javascript
+    app.post('/login', async (req, res) => {
+      try {
+        await authenticate(req.body);
+        res.json({ success: true });
+      } catch (err) {
+        res.status(401).json({ success: false }); // ❌ No logging
+      }
+    });
+    ```
+    
+    **VulnZap Fix:**
+    ```javascript
+    const logger = require('winston');
+    
+    app.post('/login', async (req, res) => {
+      try {
+        await authenticate(req.body);
+        logger.info('Login successful', { 
+          username: req.body.username,
+          ip: req.ip,
+          timestamp: new Date()
+        });
+        res.json({ success: true });
+      } catch (err) {
+        logger.warn('Login failed', {
+          username: req.body.username,
+          ip: req.ip,
+          reason: err.message
+        });
+        res.status(401).json({ success: false });
+      }
+    });
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### A10:2021 – Server-Side Request Forgery (SSRF)
+
+<AccordionGroup>
+  <Accordion title="SSRF (CWE-918)">
+    **What it is:**  
+    Server fetches user-controlled URLs, potentially accessing internal resources.
+    
+    **Vulnerable Pattern:**
+    ```javascript
+    app.get('/proxy', async (req, res) => {
+      const url = req.query.url;
+      const response = await fetch(url);  // ❌ SSRF
+      res.send(await response.text());
+    });
+    ```
+    
+    **Attack Example:**
+    ```
+    /proxy?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/
+    ```
+    
+    **VulnZap Fix:**
+    ```javascript
+    const { URL } = require('url');
+    
+    app.get('/proxy', async (req, res) => {
+      try {
+        const url = new URL(req.query.url);
+        
+        // Whitelist allowed domains
+        const allowed = ['api.example.com', 'cdn.example.com'];
+        if (!allowed.includes(url.hostname)) {
+          return res.status(400).send('Domain not allowed');
+        }
+        
+        // Block private IPs
+        if (isPrivateIP(url.hostname)) {
+          return res.status(400).send('Private IPs not allowed');
+        }
+        
+        const response = await fetch(url.href);
+        res.send(await response.text());
+      } catch (err) {
+        res.status(400).send('Invalid URL');
+      }
+    });
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Additional Vulnerabilities
+
+### Race Conditions (CWE-362)
+
+```python
+# Vulnerable: TOCTOU (Time-of-check, Time-of-use)
+if account.balance >= amount:
+    # ❌ Balance could change here in concurrent requests
+    account.balance -= amount
+    account.save()
+
+# Fixed: Atomic operation
+account.objects.filter(
+    id=account.id,
+    balance__gte=amount
+).update(balance=F('balance') - amount)
+```
+
+### XML External Entity (XXE) (CWE-611)
+
+```python
+import xml.etree.ElementTree as ET
+
+# Vulnerable
+tree = ET.parse(user_xml_file)  # ❌ XXE
+
+# Fixed
+import defusedxml.ElementTree as ET
+tree = ET.parse(user_xml_file)  # ✅ XXE protection
+```
+
+### Open Redirect (CWE-601)
+
+```javascript
+// Vulnerable
+app.get('/logout', (req, res) => {
+  res.redirect(req.query.next);  // ❌ Open redirect
+});
+
+// Fixed
+app.get('/logout', (req, res) => {
+  const allowedRedirects = ['/home', '/login'];
+  const next = allowedRedirects.includes(req.query.next) 
+    ? req.query.next 
+    : '/home';
+  res.redirect(next);  // ✅ Validated redirect
+});
+```
+
+## Severity Scoring
+
+VulnZap uses CVSS 3.1 with custom exploitability factors:
+
+| Factor | Weight | Description |
+|--------|--------|-------------|
+| User Control | 40% | How much user input affects vulnerability |
+| Reachability | 30% | Is the code path actually executed? |
+| Impact | 20% | Potential damage (RCE > data access > DoS) |
+| Mitigations | 10% | Existing security controls |
+
+<Info>
+  Scores are recalculated based on your specific application context, not just generic CVE scores.
+</Info>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Dashboard Guide"
+    icon="chart-line"
+    href="/features/dashboard"
+  >
+    View and manage findings in the dashboard
+  </Card>
+  
+  <Card
+    title="Scanning Engine"
+    icon="magnifying-glass"
+    href="/features/scanning"
+  >
+    Learn about different scan modes
+  </Card>
+  
+  <Card
+    title="IDE Integration"
+    icon="code"
+    href="/features/ide-integration"
+  >
+    Get real-time detection in your editor
+  </Card>
+  
+  <Card
+    title="API Reference"
+    icon="book"
+    href="/api-reference/introduction"
+  >
+    Integrate programmatically
+  </Card>
+</CardGroup>
+

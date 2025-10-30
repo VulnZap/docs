@@ -1,0 +1,598 @@
+---
+title: "Dashboard Guide"
+description: "Complete walkthrough of the VulnZap dashboard interface and features"
+icon: "chart-line"
+---
+
+## Overview
+
+The VulnZap dashboard provides a centralized view of your security posture, scan history, vulnerability findings, and team management.
+
+Access the dashboard at: [app.vulnzap.com/dashboard](https://vulnzap.com/dashboard/dashboard)
+
+## Main Dashboard
+
+### Security Overview
+
+The landing page displays your current security posture:
+
+<img src="/images/dashboard-overview.png" alt="Dashboard Overview" />
+
+**Key Metrics:**
+
+<CardGroup cols={2}>
+  <Card title="Risk Score" icon="gauge">
+    0-100 scale based on severity and quantity of findings
+    - **0-25**: Low Risk (Green)
+    - **26-50**: Medium Risk (Yellow)
+    - **51-75**: High Risk (Orange)
+    - **76-100**: Critical Risk (Red)
+  </Card>
+  
+  <Card title="Total Scans" icon="magnifying-glass">
+    Cumulative scans across all projects
+    - Click to view scan history
+    - Filter by date range
+    - Export scan reports
+  </Card>
+  
+  <Card title="Active Findings" icon="triangle-exclamation">
+    Current unresolved vulnerabilities
+    - Grouped by severity
+    - Real-time updates
+    - Quick-fix actions
+  </Card>
+  
+  <Card title="Projects" icon="folder">
+    Connected repositories and workspaces
+    - Add/remove projects
+    - Per-project risk scores
+    - Last scan timestamps
+  </Card>
+</CardGroup>
+
+### Vulnerability Trends
+
+6-month historical chart showing vulnerability trends:
+
+```
+Critical  ▁▂▃▄▃▂▁  Trending down ✅
+High      ▃▄▅▄▃▂▁  Improving
+Medium    ▅▅▄▄▃▃▂  Stable
+Low       ▇▇▇▆▆▅▅  Slight increase
+```
+
+**Insights:**
+- Hover over data points for exact counts
+- Click severity labels to filter
+- Export data as CSV or JSON
+
+### Weekly Activity
+
+Bar chart showing scans performed and findings discovered:
+
+| Day | Scans | Findings |
+|-----|-------|----------|
+| Mon | 15    | 8        |
+| Tue | 12    | 5        |
+| Wed | 18    | 11       |
+| Thu | 10    | 3        |
+| Fri | 14    | 7        |
+| Sat | 3     | 1        |
+| Sun | 2     | 0        |
+
+<Info>
+  Activity metrics help identify which days your team is most actively addressing security issues.
+</Info>
+
+## Projects Section
+
+### Managing Projects
+
+View and manage all connected repositories:
+
+<img src="/images/projects-list.png" alt="Projects List" />
+
+**Project Card Details:**
+- Repository name and URL
+- Current risk score
+- Last scan date and status
+- Quick action buttons
+
+### Adding a Project
+
+<Steps>
+  <Step title="Click 'Add Project'">
+    Navigate to Projects → Add New Project
+  </Step>
+  
+  <Step title="Connect GitHub">
+    Authenticate with GitHub and grant repository access
+  </Step>
+  
+  <Step title="Select Repository">
+    Choose from available repositories (84 remaining in your account)
+  </Step>
+  
+  <Step title="Configure Settings">
+    - Enable/disable automatic scanning
+    - Set scan schedule (hourly, daily, on-push)
+    - Configure notification preferences
+  </Step>
+  
+  <Step title="Run Initial Scan">
+    VulnZap performs an initial baseline scan
+  </Step>
+</Steps>
+
+<Tip>
+  **Free tier**: 5 projects max  
+  **Standard tier**: Unlimited projects
+</Tip>
+
+### Project Details
+
+Click any project to view detailed information:
+
+**Tabs:**
+
+<Tabs>
+  <Tab title="Overview">
+    - Risk score trend
+    - Vulnerability breakdown
+    - Recent scan history
+    - Quick actions (Scan Now, View Findings, Settings)
+  </Tab>
+  
+  <Tab title="Findings">
+    - All vulnerabilities for this project
+    - Filter by severity, status, file
+    - Bulk actions (Fix All, Mark as False Positive)
+  </Tab>
+  
+  <Tab title="Scans">
+    - Complete scan history
+    - Diff views between scans
+    - Download reports (PDF, JSON, CSV)
+  </Tab>
+  
+  <Tab title="Settings">
+    - Scan configuration
+    - Notification rules
+    - Integration settings (CI/CD, webhooks)
+    - Archive or delete project
+  </Tab>
+</Tabs>
+
+## Scans Section
+
+### Scan History
+
+View all scans across all projects:
+
+<img src="/images/scans-list.png" alt="Scans List" />
+
+**Filters:**
+- Date range
+- Project
+- Scan type (inline, full repo, CI/CD)
+- Status (completed, in progress, failed)
+
+### Scan Details
+
+Click any scan to view detailed results:
+
+**Information Displayed:**
+- Scan metadata (timestamp, duration, files analyzed)
+- Vulnerability summary
+- File-by-file breakdown
+- Patch recommendations
+
+**Example Scan Result:**
+
+```bash
+Scan ID: scan_abc123xyz
+Project: my-app
+Status: Completed
+Duration: 28.4s
+Files Analyzed: 342
+Lines of Code: 45,231
+
+Findings:
+  ■ Critical (2)
+    └─ SQL Injection in src/db/queries.ts:45
+    └─ Command Injection in src/utils/exec.js:12
+  
+  ■ High (5)
+    └─ XSS in src/components/UserProfile.tsx:78
+    └─ Path Traversal in src/api/files.ts:34
+    └─ ... (3 more)
+  
+  ■ Medium (8)
+  ■ Low (3)
+```
+
+### Comparing Scans
+
+Compare two scans to see what changed:
+
+<Steps>
+  <Step title="Select Base Scan">
+    Choose the earlier scan as baseline
+  </Step>
+  
+  <Step title="Select Comparison Scan">
+    Choose the newer scan to compare
+  </Step>
+  
+  <Step title="View Diff">
+    See added, fixed, and unchanged vulnerabilities
+  </Step>
+</Steps>
+
+**Diff View:**
+
+```diff
++ Added (3):
+  + Critical: XSS in login.tsx:23
+  + High: CSRF in api/auth.ts:56
+  + Medium: Weak crypto in utils/hash.js:12
+
+- Fixed (5):
+  - Critical: SQL Injection in queries.ts:45
+  - High: Command Injection in exec.js:12
+  - ... (3 more)
+
+~ Unchanged (8):
+  ~ Medium: Missing rate limiting
+  ~ Low: Insecure cookie flags
+  ~ ... (6 more)
+```
+
+<Check>
+  Use scan comparison before deploying to ensure you haven't introduced new vulnerabilities.
+</Check>
+
+## Findings Section
+
+### Vulnerability List
+
+All detected vulnerabilities across all projects:
+
+**Columns:**
+- Severity (Critical, High, Medium, Low)
+- Type (SQLi, XSS, Path Traversal, etc.)
+- File and line number
+- Status (Open, Fixed, False Positive, Ignored)
+- Actions (View, Fix, Ignore)
+
+**Filtering:**
+
+```
+┌─────────────────────────────────────────┐
+│ Filter Findings                          │
+├─────────────────────────────────────────┤
+│ Severity: [All] [Critical] [High] ...   │
+│ Status: [All] [Open] [Fixed] [Ignored]  │
+│ Project: [All] [my-app] [api-server] ..│
+│ Type: [All] [SQLi] [XSS] [CSRF] ...     │
+│ Date: [Last 7 days] [Last 30 days] ...  │
+└─────────────────────────────────────────┘
+```
+
+### Finding Details
+
+Click any finding to view comprehensive information:
+
+<Tabs>
+  <Tab title="Overview">
+    **Vulnerability Summary:**
+    - Severity and OWASP classification
+    - CWE reference
+    - Exploitability score
+    - Affected code location
+    
+    **Example:**
+    ```
+    Type: SQL Injection
+    Severity: Critical (CVSS 9.8)
+    OWASP: A03:2021 - Injection
+    CWE: CWE-89
+    Exploitability: 95/100 (Very High)
+    
+    File: src/db/queries.ts
+    Line: 45
+    Function: getUserById()
+    ```
+  </Tab>
+  
+  <Tab title="Code Context">
+    **Vulnerable Code:**
+    ```javascript:45:src/db/queries.ts
+    export function getUserById(id: string) {
+      const query = `SELECT * FROM users WHERE id = ${id}`;
+      return db.execute(query);
+    }
+    ```
+    
+    **Data Flow:**
+    ```
+    Source: req.params.id (user-controlled)
+      ↓
+    Flow: Direct string interpolation
+      ↓
+    Sink: db.execute() (SQL execution)
+    ```
+  </Tab>
+  
+  <Tab title="Recommended Fix">
+    **Secure Implementation:**
+    ```javascript:45:src/db/queries.ts
+    export function getUserById(id: string) {
+      const query = 'SELECT * FROM users WHERE id = ?';
+      return db.execute(query, [id]);
+    }
+    ```
+    
+    **Changes:**
+    - ✅ Parameterized query prevents SQL injection
+    - ✅ User input properly escaped
+    - ✅ Same return type (tests still pass)
+    
+    <button>Apply Fix Automatically</button>
+  </Tab>
+  
+  <Tab title="Learn More">
+    **Why This Matters:**
+    SQL injection allows attackers to manipulate database queries, potentially leading to:
+    - Unauthorized data access
+    - Data modification or deletion
+    - Authentication bypass
+    - Remote code execution (in some databases)
+    
+    **Exploit Example:**
+    ```
+    GET /users/1' OR '1'='1
+    
+    Resulting query:
+    SELECT * FROM users WHERE id = '1' OR '1'='1'
+    # Returns all users instead of just id=1
+    ```
+    
+    **References:**
+    - [OWASP SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection)
+    - [CWE-89](https://cwe.mitre.org/data/definitions/89.html)
+    - [Parameterized Queries Guide](https://cheatsheetseries.owasp.org/cheatsheets/Query_Parameterization_Cheat_Sheet.html)
+  </Tab>
+</Tabs>
+
+### Bulk Actions
+
+Handle multiple findings at once:
+
+1. Select findings (checkbox or Ctrl+Click)
+2. Choose action:
+   - **Fix All**: Apply all recommended patches
+   - **Mark as False Positive**: Remove from active findings
+   - **Ignore**: Suppress warnings (with reason)
+   - **Export**: Download as CSV/JSON
+   - **Assign**: Assign to team member
+
+<Warning>
+  Marking as "False Positive" requires justification for audit purposes.
+</Warning>
+
+## API Keys Section
+
+### Managing API Keys
+
+Create and manage programmatic access tokens:
+
+<img src="/images/api-keys.png" alt="API Keys" />
+
+**Key Information:**
+- Key name and description
+- Created date
+- Last used timestamp
+- Permissions scope
+- Status (Active, Revoked)
+
+### Creating a New API Key
+
+<Steps>
+  <Step title="Click 'Create API Key'">
+    Navigate to Settings → API Keys → Create
+  </Step>
+  
+  <Step title="Configure Key">
+    - **Name**: Descriptive identifier (e.g., "CI/CD Pipeline")
+    - **Description**: Optional notes
+    - **Scope**: Full access or read-only
+    - **Expiration**: Never, 30 days, 90 days, 1 year
+  </Step>
+  
+  <Step title="Copy Key">
+    ⚠️ **Important**: Copy the key immediately - it won't be shown again
+  </Step>
+  
+  <Step title="Store Securely">
+    Store in environment variables or secrets manager, never in code
+  </Step>
+</Steps>
+
+**Example Usage:**
+
+```bash
+export VULNZAP_API_KEY="vzap_abc123..."
+vulnzap scan
+```
+
+### Revoking Keys
+
+Immediately invalidate compromised keys:
+
+1. Select the key
+2. Click "Revoke"
+3. Confirm action
+4. All requests with this key will fail immediately
+
+<Tip>
+  Rotate API keys every 90 days for security best practices.
+</Tip>
+
+## Billing Section
+
+### Current Plan
+
+View your subscription details:
+
+```
+┌────────────────────────────────────────┐
+│ Current Plan: FREE                     │
+├────────────────────────────────────────┤
+│ Package Scans: 2,547 / 5,000          │
+│ Line Scans: 8,923 / 10,000            │
+│ API Access: Not included               │
+│ Data Retention: 7 days                 │
+│ Projects: 3 / 5                        │
+└────────────────────────────────────────┘
+```
+
+### Usage Metrics
+
+Track consumption across billing period:
+
+**Charts:**
+- Package scans per day
+- Line scans per day
+- API calls per day (paid plans)
+- Storage usage
+
+**Alerts:**
+<Warning>
+  You've used 89% of your monthly line scan quota. Consider upgrading to STANDARD for unlimited scans.
+</Warning>
+
+### Upgrade Plan
+
+Compare plans and upgrade:
+
+| Feature | Free | Standard | Scale | Enterprise |
+|---------|------|----------|-------|------------|
+| Package Scans | 5,000 | Unlimited | Unlimited | Unlimited |
+| Line Scans | 10,000 | 100,000 | 500,000 | Unlimited |
+| API Access | ❌ | ✅ | ✅ | ✅ |
+| Retention | 7 days | 30 days | 90 days | 365 days |
+| Support | Community | Email | Priority | Phone + SLA |
+| **Price** | **$0** | **$19/seat/mo** | **$79/seat/mo** | **Custom** |
+
+<Card
+  title="Upgrade to Standard"
+  icon="arrow-up"
+  href="https://vulnzap.com/dashboard/billing/upgrade"
+>
+  Unlock unlimited package scans and API access
+</Card>
+
+## Team Management
+
+<Info>
+  Team features are available on Standard plans and above.
+</Info>
+
+### Team Members
+
+Invite and manage team access:
+
+**Roles:**
+- **Owner**: Full access, billing management
+- **Admin**: Full access, no billing
+- **Member**: View and fix findings
+- **Read-only**: View findings only
+
+### Audit Trail
+
+View all team activity:
+
+```
+2025-10-19 14:32:11  user@example.com  Created API key "CI/CD Pipeline"
+2025-10-19 13:45:03  admin@example.com  Fixed Critical finding in auth.ts
+2025-10-19 12:21:34  user@example.com  Ran full repo scan on "my-app"
+2025-10-19 09:15:22  admin@example.com  Added project "api-server"
+```
+
+**Exportable for compliance audits.**
+
+## Notifications
+
+Configure alert preferences:
+
+<AccordionGroup>
+  <Accordion title="Email Notifications">
+    - New Critical/High findings
+    - Scan completion
+    - Weekly summary reports
+    - Billing alerts
+  </Accordion>
+  
+  <Accordion title="Slack Integration">
+    Post notifications to Slack channels:
+    ```
+    🚨 VulnZap Alert
+    Critical vulnerability detected in my-app
+    SQL Injection in src/db/queries.ts:45
+    [View Finding] [Apply Fix]
+    ```
+  </Accordion>
+  
+  <Accordion title="Webhook Integration">
+    Send events to custom endpoints:
+    ```json
+    {
+      "event": "finding.created",
+      "severity": "critical",
+      "type": "sql_injection",
+      "project": "my-app",
+      "file": "src/db/queries.ts",
+      "line": 45
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Security Coverage"
+    icon="shield"
+    href="/features/security-coverage"
+  >
+    Learn what vulnerabilities VulnZap detects
+  </Card>
+  
+  <Card
+    title="IDE Integration"
+    icon="code"
+    href="/features/ide-integration"
+  >
+    Set up real-time scanning in your editor
+  </Card>
+  
+  <Card
+    title="CLI Guide"
+    icon="terminal"
+    href="/integration/cli"
+  >
+    Master command-line scanning
+  </Card>
+  
+  <Card
+    title="API Reference"
+    icon="book"
+    href="/api-reference/introduction"
+  >
+    Integrate VulnZap programmatically
+  </Card>
+</CardGroup>
+

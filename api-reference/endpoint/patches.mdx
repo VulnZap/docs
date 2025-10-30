@@ -1,0 +1,89 @@
+---
+title: "Patches"
+description: "Generate and apply security patches"
+api: "POST /v1/patches"
+---
+
+## Generate Patch
+
+Generate a security patch for a finding.
+
+### Request
+
+```bash
+curl -X POST https://api.vulnzap.com/v1/patches \
+  -H "Authorization: Bearer vzap_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "finding_id": "finding_abc123"
+  }'
+```
+
+### Response
+
+```json
+{
+  "patch_id": "patch_xyz789",
+  "finding_id": "finding_abc123",
+  "file": "src/db/queries.ts",
+  "vulnerability_type": "sql_injection",
+  "diff": "--- a/src/db/queries.ts\n+++ b/src/db/queries.ts\n@@ -43,7 +43,8 @@\n export function getUserById(id: string) {\n-  const query = `SELECT * FROM users WHERE id = ${id}`;\n+  const query = 'SELECT * FROM users WHERE id = ?';\n+  return db.execute(query, [id]);\n-  return db.execute(query);\n",
+  "description": "Replace string concatenation with parameterized query",
+  "auto_applicable": true,
+  "created_at": "2025-10-19T15:30:22Z"
+}
+```
+
+## Apply Patch
+
+Apply a generated patch to your codebase.
+
+### Request
+
+```bash
+curl -X POST https://api.vulnzap.com/v1/patches/patch_xyz789/apply \
+  -H "Authorization: Bearer vzap_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "commit": true,
+    "commit_message": "Fix SQL injection vulnerability"
+  }'
+```
+
+### Response
+
+```json
+{
+  "patch_id": "patch_xyz789",
+  "applied": true,
+  "file": "src/db/queries.ts",
+  "commit_sha": "abc123def456",
+  "message": "Patch applied successfully"
+}
+```
+
+## Export Patch
+
+Export patch for manual review.
+
+### Request
+
+```bash
+curl https://api.vulnzap.com/v1/patches/patch_xyz789/export \
+  -H "Authorization: Bearer vzap_abc123..."
+```
+
+### Response
+
+```
+diff --git a/src/db/queries.ts b/src/db/queries.ts
+index abc123..def456 100644
+--- a/src/db/queries.ts
++++ b/src/db/queries.ts
+@@ -43,7 +43,8 @@ export function getUserById(id: string) {
+-  const query = `SELECT * FROM users WHERE id = ${id}`;
++  const query = 'SELECT * FROM users WHERE id = ?';
++  return db.execute(query, [id]);
+-  return db.execute(query);
+```
+

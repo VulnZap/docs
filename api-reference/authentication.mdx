@@ -1,0 +1,200 @@
+---
+title: "Authentication"
+description: "API key management and authentication methods"
+icon: "key"
+---
+
+## API Key Authentication
+
+All VulnZap API requests require authentication using an API key in the Authorization header.
+
+### Basic Authentication
+
+```bash
+curl https://api.vulnzap.com/v1/scans \
+  -H "Authorization: Bearer vzap_your_api_key_here"
+```
+
+### Creating an API Key
+
+**Via Dashboard:**
+
+<Steps>
+  <Step title="Navigate to API Keys">
+    Go to [Dashboard](https://vulnzap.com/dashboard) → **Settings** → **API Keys**
+  </Step>
+  
+  <Step title="Create Key">
+    Click **Create API Key**
+  </Step>
+  
+  <Step title="Configure">
+    - Name: "Production API Key"
+    - Scope: Full access or Read-only
+    - Expiration: Never, 90 days, 1 year
+  </Step>
+  
+  <Step title="Copy Key">
+    ⚠️ **Important**: Copy immediately - won't be shown again
+  </Step>
+</Steps>
+
+**Via CLI:**
+
+```bash
+vulnzap auth
+# Generates and stores API key locally
+```
+
+### Using API Keys
+
+**Environment Variable (Recommended):**
+
+```bash
+export VULNZAP_API_KEY="vzap_abc123..."
+curl https://api.vulnzap.com/v1/scans \
+  -H "Authorization: Bearer $VULNZAP_API_KEY"
+```
+
+**Request Header:**
+
+```http
+GET /v1/scans HTTP/1.1
+Host: api.vulnzap.com
+Authorization: Bearer vzap_abc123xyz...
+```
+
+**SDK (automatic):**
+
+```javascript
+const client = new VulnZap({
+  apiKey: process.env.VULNZAP_API_KEY
+});
+```
+
+## Key Types
+
+### Personal API Keys
+
+- **Scope**: Your projects only
+- **Permissions**: Based on your role
+- **Best for**: Development, personal automation
+
+### Team API Keys
+
+- **Scope**: All team projects (or subset)
+- **Permissions**: Configurable
+- **Best for**: CI/CD, shared services
+- **Requirements**: Admin/Owner role
+
+## Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Never Hardcode Keys">
+    ```javascript
+    // ❌ BAD
+    const apiKey = "vzap_abc123...";
+    
+    // ✅ GOOD
+    const apiKey = process.env.VULNZAP_API_KEY;
+    ```
+  </Accordion>
+  
+  <Accordion title="Use Environment Variables">
+    ```bash
+    # .env file
+    VULNZAP_API_KEY=vzap_abc123...
+    ```
+    
+    Add `.env` to `.gitignore`
+  </Accordion>
+  
+  <Accordion title="Rotate Keys Regularly">
+    Rotate every 90 days:
+    
+    1. Create new key
+    2. Update services to use new key
+    3. Revoke old key
+  </Accordion>
+  
+  <Accordion title="Use Minimal Scopes">
+    Grant only necessary permissions:
+    
+    - Read-only keys for reporting
+    - Project-specific keys where possible
+    - Avoid full-access keys unless needed
+  </Accordion>
+  
+  <Accordion title="Revoke Compromised Keys Immediately">
+    ```
+    Dashboard → Settings → API Keys → Revoke
+    ```
+    
+    Effect is immediate.
+  </Accordion>
+</AccordionGroup>
+
+## Revoking API Keys
+
+**Via Dashboard:**
+
+```
+Dashboard → Settings → API Keys → Select Key → Revoke
+```
+
+**Via API:**
+
+```bash
+curl -X DELETE https://api.vulnzap.com/v1/api-keys/key_abc123 \
+  -H "Authorization: Bearer vzap_admin_key..."
+```
+
+**Effect:** Immediate - all requests with revoked key will fail.
+
+## Testing Authentication
+
+```bash
+curl https://api.vulnzap.com/v1/auth/verify \
+  -H "Authorization: Bearer vzap_your_key..."
+```
+
+**Success Response:**
+
+```json
+{
+  "authenticated": true,
+  "user_id": "user_xyz789",
+  "scopes": ["read", "write"],
+  "expires_at": null
+}
+```
+
+**Error Response:**
+
+```json
+{
+  "error": "invalid_credentials",
+  "message": "Invalid or expired API key"
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="API Introduction"
+    icon="book"
+    href="/api-reference/introduction"
+  >
+    Complete API documentation
+  </Card>
+  
+  <Card
+    title="Scan Endpoint"
+    icon="magnifying-glass"
+    href="/api-reference/endpoint/scan"
+  >
+    Create and manage scans
+  </Card>
+</CardGroup>
+

@@ -1,0 +1,561 @@
+---
+title: "Scanning Engine"
+description: "Understanding VulnZap's real-time scanning capabilities and modes"
+icon: "magnifying-glass-chart"
+---
+
+## Overview
+
+VulnZap's scanning engine provides multiple modes for different use cases, from real-time inline scanning to comprehensive repository audits.
+
+## Scan Types
+
+### Inline Scanning
+
+Real-time vulnerability detection as you write code:
+
+```bash
+vulnzap watch
+```
+
+**Features:**
+- Analyzes only changed lines (diff-based)
+- Sub-100ms latency
+- IDE integration via MCP protocol
+- Immediate visual feedback
+
+**Best for:**
+- Active development
+- Pair programming with AI assistants
+- Catching issues before commit
+
+<Tabs>
+  <Tab title="VS Code / Cursor">
+    ```json settings.json
+    {
+      "vulnzap.inlineScanning": true,
+      "vulnzap.scanOnSave": true,
+      "vulnzap.highlightSeverity": "high"
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Windsurf">
+    Enable in Settings → Tools → VulnZap → Real-time Scanning
+  </Tab>
+  
+  <Tab title="Cline">
+    Automatically enabled when VulnZap MCP server is active
+  </Tab>
+</Tabs>
+
+### File Scanning
+
+Scan specific files on demand:
+
+```bash
+vulnzap scan src/auth.js src/db/queries.ts
+```
+
+**Options:**
+
+```bash
+# Scan with specific severity threshold
+vulnzap scan --min-severity high src/**/*.ts
+
+# Output as JSON
+vulnzap scan --format json src/api/ > report.json
+
+# Include fix suggestions
+vulnzap scan --with-fixes src/components/
+
+# Verbose output
+vulnzap scan --verbose src/
+```
+
+### Repository Scanning
+
+Deep analysis of entire codebase:
+
+```bash
+vulnzap scan
+```
+
+**What's Analyzed:**
+- All files in supported languages
+- Complete call graphs
+- Cross-file data flow
+- Import/export relationships
+- Configuration files
+
+**Exclusions (via `.vulnzapignore`):**
+
+```bash .vulnzapignore
+node_modules/
+dist/
+build/
+*.min.js
+*.test.ts
+coverage/
+```
+
+<Info>
+  Repository scans respect `.gitignore` by default. Use `--no-gitignore` to scan all files.
+</Info>
+
+### Incremental Scanning
+
+Scan only changed files since last commit:
+
+```bash
+vulnzap scan --incremental
+```
+
+**How it works:**
+1. Compares current state with last scan
+2. Analyzes only modified files
+3. Re-analyzes files that import modified code
+4. Updates findings database
+
+**Performance:**
+
+| Repo Size | Full Scan | Incremental Scan |
+|-----------|-----------|------------------|
+| 100 files | 5s | 0.8s |
+| 1,000 files | 28s | 2.1s |
+| 10,000 files | 4m 12s | 8.3s |
+
+### CI/CD Scanning
+
+Automated scanning in continuous integration:
+
+```yaml .github/workflows/vulnzap.yml
+name: VulnZap Security
+
+on: [pull_request, push]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: vulnzap/scan-action@v1
+        with:
+          api-key: ${{ secrets.VULNZAP_API_KEY }}
+          fail-on: high
+          incremental: true
+```
+
+**Fail Conditions:**
+
+```bash
+# Block on any finding
+--fail-on any
+
+# Block on medium or higher
+--fail-on medium
+
+# Block on high or critical
+--fail-on high
+
+# Block on critical only
+--fail-on critical
+
+# Never block (report only)
+--fail-on never
+```
+
+## Agent-Aware Scanning
+
+### MCP Protocol Integration
+
+VulnZap integrates with AI coding assistants via the Model Context Protocol:
+
+**Supported IDEs:**
+- Cursor
+- Windsurf
+- Cline
+- VS Code (with MCP extension)
+
+**How it works:**
+
+<Steps>
+  <Step title="Agent Generates Code">
+    User prompts AI: "Create a login endpoint"
+  </Step>
+  
+  <Step title="VulnZap Intercepts">
+    Before applying changes, VulnZap receives the diff
+  </Step>
+  
+  <Step title="Real-Time Analysis">
+    Scans generated code for vulnerabilities
+  </Step>
+  
+  <Step title="Feedback to Agent">
+    If issues found, provides secure alternative to AI
+  </Step>
+  
+  <Step title="Secure Code Applied">
+    AI applies the secure version instead
+  </Step>
+</Steps>
+
+**Example Flow:**
+
+```
+User: "Create a user search endpoint"
+
+AI generates:
+app.get('/search', (req, res) => {
+  const query = `SELECT * FROM users WHERE name LIKE '%${req.query.q}%'`;
+  db.query(query, (err, results) => res.json(results));
+});
+
+VulnZap intercepts:
+❌ SQL Injection detected
+❌ No rate limiting
+❌ Missing input validation
+
+VulnZap suggests to AI:
+✅ Use parameterized queries
+✅ Add rate limiting middleware
+✅ Validate and sanitize input
+
+AI applies secure version:
+app.get('/search', rateLimit, validateQuery, (req, res) => {
+  const query = 'SELECT * FROM users WHERE name LIKE ?';
+  const param = `%${sanitize(req.query.q)}%`;
+  db.query(query, [param], (err, results) => res.json(results));
+});
+```
+
+### Package Installation Monitoring
+
+VulnZap prevents installation of vulnerable packages:
+
+```bash
+npm install express@4.17.1
+```
+
+**VulnZap checks:**
+- Known CVEs in package
+- Malicious package warnings
+- Outdated versions with patches
+- Supply chain risks
+
+**Example Warning:**
+
+```
+⚠️  VulnZap Warning
+
+Package: express@4.17.1
+Issue: Known vulnerability CVE-2022-24999
+Severity: Medium
+Recommendation: Upgrade to express@4.18.2 or later
+
+[Block Install] [Install Anyway] [Learn More]
+```
+
+## Scan Configuration
+
+### Global Settings
+
+Configure default scan behavior:
+
+```yaml .vulnzap/config.yml
+# Scan settings
+scan:
+  autofix: false
+  min_severity: medium
+  exclude_patterns:
+    - "**/*.test.ts"
+    - "**/fixtures/**"
+  
+# Performance
+performance:
+  max_threads: 4
+  timeout: 300
+  
+# Reporting
+reporting:
+  format: json
+  output: vulnzap-report.json
+  verbose: true
+```
+
+### Per-Project Settings
+
+Override global settings for specific projects:
+
+```yaml .vulnzap.yml
+name: my-app
+language: typescript
+framework: express
+
+scan:
+  min_severity: high
+  autofix: true
+  
+ignore:
+  - type: sql_injection
+    file: src/legacy/old-queries.ts
+    reason: "Legacy code, scheduled for refactor"
+    expires: 2025-12-31
+```
+
+### Severity Thresholds
+
+Customize what constitutes each severity level:
+
+```yaml
+severity:
+  critical:
+    - Remote Code Execution
+    - SQL Injection (user-reachable)
+    - Authentication Bypass
+  
+  high:
+    - XSS (reflected)
+    - Path Traversal
+    - Insecure Deserialization
+  
+  medium:
+    - CSRF
+    - Weak Cryptography
+    - Missing Security Headers
+  
+  low:
+    - Information Disclosure
+    - Insecure Cookie Flags
+```
+
+## Output Formats
+
+### Terminal (Default)
+
+Color-coded, human-readable output:
+
+```bash
+vulnzap scan
+
+╔══════════════════════════════════════════════════════════╗
+║ VulnZap Scan Results                                      ║
+╠══════════════════════════════════════════════════════════╣
+║ 🔴 Critical: 2   🟠 High: 5   🟡 Medium: 8   🟢 Low: 3    ║
+╚══════════════════════════════════════════════════════════╝
+
+🔴 CRITICAL: SQL Injection
+   File: src/db/queries.ts:45
+   Function: getUserById()
+   
+   Vulnerable code:
+   45 | const query = `SELECT * FROM users WHERE id = ${id}`;
+   
+   Recommendation: Use parameterized queries
+   [View Details] [Apply Fix]
+```
+
+### JSON
+
+Machine-readable output for tooling:
+
+```bash
+vulnzap scan --format json
+
+{
+  "scan_id": "scan_abc123",
+  "timestamp": "2025-10-19T14:32:11Z",
+  "risk_score": 67,
+  "summary": {
+    "critical": 2,
+    "high": 5,
+    "medium": 8,
+    "low": 3
+  },
+  "findings": [
+    {
+      "id": "finding_xyz789",
+      "severity": "critical",
+      "type": "sql_injection",
+      "cwe": "CWE-89",
+      "owasp": "A03:2021",
+      "file": "src/db/queries.ts",
+      "line": 45,
+      "column": 17,
+      "function": "getUserById",
+      "source": "req.params.id",
+      "sink": "db.execute",
+      "patch": {
+        "available": true,
+        "diff": "..."
+      }
+    }
+  ]
+}
+```
+
+### SARIF
+
+Static Analysis Results Interchange Format (GitHub native):
+
+```bash
+vulnzap scan --format sarif > results.sarif
+```
+
+Upload to GitHub Security tab for native integration.
+
+### HTML Report
+
+Visual report with charts and graphs:
+
+```bash
+vulnzap scan --format html --output report.html
+```
+
+<Info>
+  HTML reports include interactive vulnerability explorer and fix preview.
+</Info>
+
+## Performance Optimization
+
+### Caching
+
+VulnZap caches analysis results to speed up subsequent scans:
+
+**Cache Levels:**
+- **File-level**: Unchanged files skip analysis
+- **AST-level**: Parsed syntax trees cached
+- **Pattern-level**: Detection results cached
+
+**Cache Management:**
+
+```bash
+# View cache status
+vulnzap cache status
+
+# Clear cache
+vulnzap cache clear
+
+# Disable cache (force full scan)
+vulnzap scan --no-cache
+```
+
+### Parallel Scanning
+
+Utilize multiple CPU cores:
+
+```bash
+# Auto-detect cores
+vulnzap scan --parallel
+
+# Specify thread count
+vulnzap scan --threads 8
+```
+
+### Incremental Mode
+
+Only scan changed files:
+
+```bash
+# Scan git diff
+vulnzap scan --incremental
+
+# Scan specific commit range
+vulnzap scan --since HEAD~5
+
+# Scan uncommitted changes
+vulnzap scan --staged
+```
+
+## Advanced Features
+
+### Custom Rules
+
+Define project-specific security rules:
+
+```yaml .vulnzap/rules/custom.yml
+rules:
+  - id: no-eval
+    severity: critical
+    message: "Never use eval() - use safer alternatives"
+    pattern: |
+      eval($EXPR)
+    languages: [javascript, typescript]
+    
+  - id: require-auth-middleware
+    severity: high
+    message: "API routes must use authentication middleware"
+    pattern: |
+      app.$METHOD($PATH, ($REQ, $RES) => { ... })
+    where:
+      - not: app.$METHOD($PATH, authenticate, ...)
+    languages: [javascript, typescript]
+```
+
+### Baseline Scanning
+
+Establish security baseline and track deviations:
+
+```bash
+# Create baseline
+vulnzap scan --baseline
+
+# Compare against baseline
+vulnzap scan --compare-baseline
+
+# Update baseline
+vulnzap scan --update-baseline
+```
+
+### Diff Scanning
+
+Scan only changes in pull requests:
+
+```bash
+# Scan PR diff
+vulnzap scan --pr 123
+
+# Scan against specific branch
+vulnzap scan --compare main
+
+# Scan specific commit
+vulnzap scan --commit abc123
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Security Coverage"
+    icon="shield"
+    href="/features/security-coverage"
+  >
+    Learn what vulnerabilities VulnZap detects
+  </Card>
+  
+  <Card
+    title="IDE Integration"
+    icon="code"
+    href="/features/ide-integration"
+  >
+    Set up real-time scanning in your editor
+  </Card>
+  
+  <Card
+    title="CLI Reference"
+    icon="terminal"
+    href="/integration/cli"
+  >
+    Complete command-line documentation
+  </Card>
+  
+  <Card
+    title="CI/CD Integration"
+    icon="code-branch"
+    href="/integration/ci-cd"
+  >
+    Automate security in your pipeline
+  </Card>
+</CardGroup>
+

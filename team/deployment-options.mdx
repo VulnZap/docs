@@ -1,0 +1,819 @@
+---
+title: "Deployment Options"
+description: "VulnZap cloud, VPC, and on-premises deployment configurations"
+icon: "server"
+---
+
+## Overview
+
+VulnZap offers flexible deployment options to meet your organization's security, compliance, and infrastructure requirements.
+
+<CardGroup cols={3}>
+  <Card title="VulnZap Cloud" icon="cloud">
+    Fully managed SaaS
+  </Card>
+  <Card title="VPC Deployment" icon="network-wired">
+    Deploy in your cloud
+  </Card>
+  <Card title="On-Premises" icon="building">
+    Complete air-gapped
+  </Card>
+</CardGroup>
+
+## Deployment Comparison
+
+| Feature | Cloud | VPC | On-Premises |
+|---------|-------|-----|-------------|
+| **Setup Time** | Immediate | 1-2 days | 1-2 weeks |
+| **Management** | Fully managed | Partially managed | Self-managed |
+| **Updates** | Automatic | Automatic* | Manual |
+| **Data Location** | VulnZap infrastructure | Your infrastructure | Your infrastructure |
+| **Internet Required** | Yes | Yes* | No (offline mode) |
+| **Cost** | Lowest | Medium | Highest |
+| **Plans** | All | Scale+ | Enterprise only |
+| **Support** | Email | Priority | Dedicated |
+
+*Optional: Can be air-gapped
+
+## VulnZap Cloud (SaaS)
+
+### Overview
+
+Fully managed, multi-tenant SaaS deployment hosted by VulnZap.
+
+**Ideal for:**
+- Startups and small teams
+- Quick setup requirements
+- Standard compliance needs
+- Budget-conscious organizations
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                  Your Development Environment            │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐              │
+│  │   IDE    │  │    CLI   │  │  CI/CD   │              │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘              │
+└───────┼─────────────┼─────────────┼────────────────────┘
+        │             │             │
+        │    HTTPS (TLS 1.3)        │
+        │             │             │
+┌───────▼─────────────▼─────────────▼────────────────────┐
+│              VulnZap Cloud (us-east-1)                  │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │  API Gateway + Load Balancer                     │  │
+│  └────────────────────┬─────────────────────────────┘  │
+│  ┌────────────────────▼─────────────────────────────┐  │
+│  │  Scanning Service (Kubernetes)                   │  │
+│  │  - Auto-scaling                                  │  │
+│  │  - Multi-AZ deployment                           │  │
+│  │  - In-memory analysis (no storage)               │  │
+│  └────────────────────┬─────────────────────────────┘  │
+│  ┌────────────────────▼─────────────────────────────┐  │
+│  │  Metadata DB (Encrypted)                         │  │
+│  │  - Findings metadata only                        │  │
+│  │  - No source code stored                         │  │
+│  └──────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Data Residency
+
+**Available Regions:**
+- **us-east-1** (US East - N. Virginia)
+- **eu-west-1** (EU - Ireland)
+- **ap-southeast-1** (Asia Pacific - Singapore)
+
+Configure region in dashboard:
+
+```
+Dashboard → Settings → Data Residency → Select Region
+```
+
+<Info>
+  Region selection available on **Standard** plans and above.
+</Info>
+
+### Security
+
+**Data Protection:**
+- TLS 1.3 in transit
+- AES-256 encryption at rest
+- No source code storage (metadata only)
+- SOC 2 Type II compliant
+- GDPR compliant
+
+**Network Security:**
+- WAF protection
+- DDoS mitigation
+- Rate limiting
+- IP whitelisting (Enterprise)
+
+### Setup
+
+<Steps>
+  <Step title="Sign Up">
+    Create account at [app.vulnzap.com/signup](https://vulnzap.com/dashboard/signup)
+  </Step>
+  
+  <Step title="Verify Email">
+    Confirm email address
+  </Step>
+  
+  <Step title="Select Region (Optional)">
+    Choose data residency region
+  </Step>
+  
+  <Step title="Install CLI">
+    ```bash
+    npm install -g vulnzap
+    vulnzap auth
+    ```
+  </Step>
+  
+  <Step title="Start Scanning">
+    ```bash
+    vulnzap scan
+    ```
+  </Step>
+</Steps>
+
+**Setup Time:** < 5 minutes
+
+## VPC Deployment
+
+### Overview
+
+VulnZap deployed in your AWS, GCP, or Azure environment with your own infrastructure.
+
+**Ideal for:**
+- Medium to large enterprises
+- Strict data residency requirements
+- Existing cloud infrastructure
+- Compliance requirements (HIPAA, PCI-DSS, etc.)
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│              Your AWS/GCP/Azure VPC                      │
+│                                                          │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  Public Subnet                                    │  │
+│  │  ┌──────────────────────────────────────────┐    │  │
+│  │  │  Application Load Balancer               │    │  │
+│  │  │  - SSL/TLS termination                   │    │  │
+│  │  └────────────────┬─────────────────────────┘    │  │
+│  └─────────────────────┼────────────────────────────┘  │
+│                       │                                │
+│  ┌────────────────────▼──────────────────────────────┐  │
+│  │  Private Subnet                                   │  │
+│  │  ┌──────────────────────────────────────────┐    │  │
+│  │  │  VulnZap Services (ECS/Kubernetes)       │    │  │
+│  │  │  - API Server                            │    │  │
+│  │  │  - Scanning Workers                      │    │  │
+│  │  │  - MCP Server                            │    │  │
+│  │  └────────────────┬─────────────────────────┘    │  │
+│  │  ┌────────────────▼─────────────────────────┐    │  │
+│  │  │  Database (RDS/Cloud SQL)                │    │  │
+│  │  │  - Encrypted storage                     │    │  │
+│  │  │  - Automated backups                     │    │  │
+│  │  └──────────────────────────────────────────┘    │  │
+│  └───────────────────────────────────────────────────┘  │
+│                                                          │
+│  Optional: VPN/Private Link to VulnZap for updates     │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Supported Cloud Providers
+
+<Tabs>
+  <Tab title="AWS">
+    **Requirements:**
+    - AWS account with admin access
+    - VPC with public and private subnets
+    - ECS or EKS cluster
+    - RDS PostgreSQL instance
+    - S3 bucket (for reports)
+    
+    **Deployment Method:**
+    - Terraform module
+    - CloudFormation template
+    - Manual setup guide
+    
+    **Estimated Cost:** $200-500/month
+  </Tab>
+  
+  <Tab title="Google Cloud">
+    **Requirements:**
+    - GCP project with appropriate IAM roles
+    - VPC with firewall rules
+    - GKE cluster
+    - Cloud SQL PostgreSQL
+    - Cloud Storage bucket
+    
+    **Deployment Method:**
+    - Terraform module
+    - Deployment Manager template
+    - Manual setup guide
+    
+    **Estimated Cost:** $180-450/month
+  </Tab>
+  
+  <Tab title="Azure">
+    **Requirements:**
+    - Azure subscription
+    - Virtual Network
+    - AKS cluster
+    - Azure Database for PostgreSQL
+    - Blob Storage
+    
+    **Deployment Method:**
+    - Terraform module
+    - ARM template
+    - Manual setup guide
+    
+    **Estimated Cost:** $220-520/month
+  </Tab>
+</Tabs>
+
+### Setup Process
+
+<Steps>
+  <Step title="Contact Sales">
+    Email enterprise@vulnzap.com for VPC deployment
+  </Step>
+  
+  <Step title="Infrastructure Review">
+    VulnZap team reviews your infrastructure requirements
+  </Step>
+  
+  <Step title="Receive Deployment Package">
+    Get Terraform modules, Docker images, and deployment guide
+  </Step>
+  
+  <Step title="Deploy Infrastructure">
+    ```bash
+    terraform init
+    terraform plan
+    terraform apply
+    ```
+  </Step>
+  
+  <Step title="Configure">
+    Set environment variables and secrets
+  </Step>
+  
+  <Step title="Verify Deployment">
+    Run health checks and test scans
+  </Step>
+  
+  <Step title="Go Live">
+    Update CLI configuration to use VPC endpoint
+  </Step>
+</Steps>
+
+**Setup Time:** 1-2 days
+
+### Configuration
+
+#### AWS Example (Terraform)
+
+```hcl
+module "vulnzap" {
+  source = "vulnzap/vulnzap-vpc/aws"
+  version = "1.2.0"
+  
+  vpc_id = "vpc-abc123"
+  private_subnet_ids = ["subnet-111", "subnet-222"]
+  public_subnet_ids = ["subnet-333", "subnet-444"]
+  
+  database_instance_class = "db.t3.medium"
+  database_storage_gb = 100
+  
+  ecs_cluster_name = "vulnzap-production"
+  ecs_desired_count = 2
+  ecs_cpu = 1024
+  ecs_memory = 2048
+  
+  domain_name = "vulnzap.example.com"
+  ssl_certificate_arn = "arn:aws:acm:..."
+  
+  enable_auto_scaling = true
+  min_capacity = 2
+  max_capacity = 10
+  
+  backup_retention_days = 30
+  
+  tags = {
+    Environment = "production"
+    ManagedBy = "terraform"
+  }
+}
+```
+
+#### Client Configuration
+
+Point CLI to your VPC deployment:
+
+```bash
+vulnzap config set api_endpoint https://vulnzap.example.com
+vulnzap auth --key vzap_your_api_key
+```
+
+### Management
+
+**Updates:**
+- Automatic (via VulnZap managed updates)
+- Manual (you control update schedule)
+- Air-gapped (manual image deployment)
+
+**Monitoring:**
+- CloudWatch/Stackdriver/Azure Monitor
+- VulnZap health dashboard
+- Prometheus/Grafana integration
+
+**Backups:**
+- Automated database backups
+- Point-in-time recovery
+- Cross-region replication (optional)
+
+## On-Premises Deployment
+
+### Overview
+
+Fully air-gapped VulnZap deployment in your data center.
+
+**Ideal for:**
+- Government and defense sectors
+- Highly regulated industries (finance, healthcare)
+- Air-gapped environments
+- Complete data sovereignty requirements
+
+<Info>
+  On-premises deployment requires **Enterprise** plan.
+</Info>
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│              Your Data Center (Air-Gapped)               │
+│                                                          │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  DMZ                                              │  │
+│  │  ┌──────────────────────────────────────────┐    │  │
+│  │  │  Load Balancer (HAProxy/NGINX)           │    │  │
+│  │  └────────────────┬─────────────────────────┘    │  │
+│  └─────────────────────┼────────────────────────────┘  │
+│                       │                                │
+│  ┌────────────────────▼──────────────────────────────┐  │
+│  │  Internal Network                                 │  │
+│  │  ┌──────────────────────────────────────────┐    │  │
+│  │  │  VulnZap Application Servers             │    │  │
+│  │  │  - API (3 nodes, HA)                     │    │  │
+│  │  │  - Scanning Workers (5+ nodes)           │    │  │
+│  │  │  - MCP Server (2 nodes, HA)              │    │  │
+│  │  └────────────────┬─────────────────────────┘    │  │
+│  │  ┌────────────────▼─────────────────────────┐    │  │
+│  │  │  PostgreSQL Cluster (Primary + Standby)  │    │  │
+│  │  └──────────────────────────────────────────┘    │  │
+│  │  ┌──────────────────────────────────────────┐    │  │
+│  │  │  Redis Cluster (Caching)                 │    │  │
+│  │  └──────────────────────────────────────────┘    │  │
+│  │  ┌──────────────────────────────────────────┐    │  │
+│  │  │  Object Storage (MinIO)                  │    │  │
+│  │  └──────────────────────────────────────────┘    │  │
+│  └───────────────────────────────────────────────────┘  │
+│                                                          │
+│  Optional: Isolated update server for security patches │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Hardware Requirements
+
+#### Minimum (Testing/Small Teams)
+
+```
+Application Servers: 2 nodes
+  - 8 CPU cores
+  - 16 GB RAM
+  - 100 GB SSD
+
+Database Server: 1 node
+  - 4 CPU cores
+  - 8 GB RAM
+  - 500 GB SSD
+
+Load Balancer: 1 node
+  - 2 CPU cores
+  - 4 GB RAM
+  - 50 GB SSD
+```
+
+#### Production (Medium Teams)
+
+```
+Application Servers: 3 nodes
+  - 16 CPU cores
+  - 32 GB RAM
+  - 200 GB SSD
+
+Scanning Workers: 5 nodes
+  - 8 CPU cores
+  - 16 GB RAM
+  - 100 GB SSD
+
+Database Cluster: 2 nodes (Primary + Standby)
+  - 8 CPU cores
+  - 32 GB RAM
+  - 1 TB SSD
+
+Cache Layer: 2 nodes
+  - 4 CPU cores
+  - 16 GB RAM
+  - 100 GB SSD
+
+Load Balancer: 2 nodes (HA)
+  - 4 CPU cores
+  - 8 GB RAM
+  - 50 GB SSD
+```
+
+#### Enterprise (Large Organizations)
+
+```
+Custom sizing based on:
+  - Number of repositories
+  - Scan frequency
+  - Team size
+  - Retention requirements
+
+Contact enterprise@vulnzap.com for sizing
+```
+
+### Setup Process
+
+<Steps>
+  <Step title="Contact Enterprise Sales">
+    Email enterprise@vulnzap.com
+    Provide infrastructure details and requirements
+  </Step>
+  
+  <Step title="Architecture Review">
+    30-60 minute call with VulnZap architects
+    Review network topology, security requirements
+  </Step>
+  
+  <Step title="Receive Installation Package">
+    - Docker images (air-gap compatible)
+    - Kubernetes manifests or VM images
+    - Installation scripts
+    - Documentation
+    - License key
+  </Step>
+  
+  <Step title="Prepare Infrastructure">
+    Set up servers, networking, storage
+  </Step>
+  
+  <Step title="Installation">
+    Deploy using Kubernetes, Docker Compose, or VMs
+    Configure databases, load balancers
+  </Step>
+  
+  <Step title="Configuration">
+    SSL certificates, network settings, backups
+  </Step>
+  
+  <Step title="Testing">
+    Health checks, test scans, load testing
+  </Step>
+  
+  <Step title="Training">
+    On-site or remote training for your team
+  </Step>
+  
+  <Step title="Go Live">
+    Production cutover with VulnZap support
+  </Step>
+</Steps>
+
+**Setup Time:** 1-2 weeks
+
+### Deployment Methods
+
+<Tabs>
+  <Tab title="Kubernetes">
+    ```bash
+    # Load Docker images
+    docker load < vulnzap-api.tar
+    docker load < vulnzap-scanner.tar
+    docker load < vulnzap-mcp.tar
+    
+    # Apply Kubernetes manifests
+    kubectl create namespace vulnzap
+    kubectl apply -f secrets.yml
+    kubectl apply -f configmap.yml
+    kubectl apply -f database.yml
+    kubectl apply -f api.yml
+    kubectl apply -f scanner.yml
+    kubectl apply -f mcp.yml
+    kubectl apply -f ingress.yml
+    
+    # Verify deployment
+    kubectl get pods -n vulnzap
+    ```
+  </Tab>
+  
+  <Tab title="Docker Compose">
+    ```yaml docker-compose.yml
+    version: '3.8'
+    
+    services:
+      postgres:
+        image: vulnzap/postgres:14
+        volumes:
+          - postgres-data:/var/lib/postgresql/data
+        environment:
+          POSTGRES_PASSWORD: ${DB_PASSWORD}
+      
+      redis:
+        image: vulnzap/redis:7
+        volumes:
+          - redis-data:/data
+      
+      api:
+        image: vulnzap/api:2.1.5
+        depends_on:
+          - postgres
+          - redis
+        environment:
+          DATABASE_URL: ${DATABASE_URL}
+          REDIS_URL: ${REDIS_URL}
+        deploy:
+          replicas: 3
+      
+      scanner:
+        image: vulnzap/scanner:2.1.5
+        depends_on:
+          - postgres
+          - redis
+        deploy:
+          replicas: 5
+      
+      mcp:
+        image: vulnzap/mcp:2.1.5
+        depends_on:
+          - api
+        deploy:
+          replicas: 2
+      
+      nginx:
+        image: vulnzap/nginx:latest
+        ports:
+          - "443:443"
+        depends_on:
+          - api
+    
+    volumes:
+      postgres-data:
+      redis-data:
+    ```
+    
+    ```bash
+    docker-compose up -d
+    ```
+  </Tab>
+  
+  <Tab title="Virtual Machines">
+    **Step-by-step VM deployment:**
+    
+    1. **Database VM:**
+    ```bash
+    # Install PostgreSQL 14
+    apt-get install postgresql-14
+    
+    # Configure and start
+    systemctl enable postgresql
+    systemctl start postgresql
+    ```
+    
+    2. **Application VMs (x3):**
+    ```bash
+    # Install VulnZap API
+    dpkg -i vulnzap-api_2.1.5_amd64.deb
+    
+    # Configure
+    vim /etc/vulnzap/api.conf
+    
+    # Start service
+    systemctl enable vulnzap-api
+    systemctl start vulnzap-api
+    ```
+    
+    3. **Load Balancer:**
+    ```bash
+    # Install HAProxy
+    apt-get install haproxy
+    
+    # Configure backends
+    vim /etc/haproxy/haproxy.cfg
+    ```
+  </Tab>
+</Tabs>
+
+### Offline Updates
+
+For air-gapped environments:
+
+<Steps>
+  <Step title="Request Update Package">
+    Contact VulnZap support with current version
+  </Step>
+  
+  <Step title="Receive Offline Package">
+    USB drive or secure file transfer with:
+    - New Docker images
+    - Database migration scripts
+    - Release notes
+    - Rollback instructions
+  </Step>
+  
+  <Step title="Transfer to Environment">
+    Physically transfer or one-way file transfer
+  </Step>
+  
+  <Step title="Test in Staging">
+    Apply update to staging environment first
+  </Step>
+  
+  <Step title="Apply to Production">
+    ```bash
+    ./update-vulnzap.sh --version 2.2.0
+    ```
+  </Step>
+  
+  <Step title="Verify">
+    Run health checks and test scans
+  </Step>
+</Steps>
+
+### Monitoring and Maintenance
+
+**Health Checks:**
+
+```bash
+# API health
+curl https://vulnzap.internal/health
+
+# Database
+pg_isready -h localhost -p 5432
+
+# Scanning capacity
+vulnzap admin capacity
+```
+
+**Logs:**
+
+```bash
+# Application logs
+journalctl -u vulnzap-api -f
+
+# Kubernetes logs
+kubectl logs -f deployment/vulnzap-api -n vulnzap
+```
+
+**Metrics:**
+
+```
+# Prometheus endpoints
+/metrics (API, Scanner, MCP)
+
+# Example metrics:
+vulnzap_scans_total
+vulnzap_findings_by_severity
+vulnzap_api_request_duration_seconds
+vulnzap_scanner_queue_depth
+```
+
+## Hybrid Deployment
+
+Combine deployment options for maximum flexibility:
+
+**Example: Critical Data On-Prem, Analytics in Cloud**
+
+```
+┌──────────────────────────────────┐
+│  Your Data Center (On-Premises)  │
+│  - Scan execution                │
+│  - Source code analysis          │
+│  - Vulnerability detection       │
+│  └───────────┬──────────────────┘
+│              │ (Metadata only)
+│              ▼
+│  ┌───────────────────────────────┐
+│  │  VulnZap Cloud                │
+│  │  - Dashboard and reporting    │
+│  │  - Trend analysis             │
+│  │  - Team collaboration         │
+│  └───────────────────────────────┘
+```
+
+**Benefits:**
+- Source code never leaves your infrastructure
+- Cloud dashboard for team collaboration
+- Best of both worlds
+
+## Migration
+
+### Cloud to VPC
+
+<Steps>
+  <Step title="Deploy VPC Infrastructure">
+    Set up VPC deployment (see above)
+  </Step>
+  
+  <Step title="Export Data">
+    ```bash
+    vulnzap export --all --format json > data.json
+    ```
+  </Step>
+  
+  <Step title="Import to VPC">
+    ```bash
+    vulnzap import --file data.json --target vpc
+    ```
+  </Step>
+  
+  <Step title="Update CLI Configuration">
+    Point CLI to VPC endpoint
+  </Step>
+  
+  <Step title="Verify">
+    Run test scans, verify data integrity
+  </Step>
+</Steps>
+
+### VPC to On-Premises
+
+Similar process with additional hardware setup.
+
+## Support
+
+<CardGroup cols={3}>
+  <Card title="Cloud">
+    Email support
+    Community forums
+    Knowledge base
+  </Card>
+  <Card title="VPC">
+    Priority email
+    Slack channel
+    Quarterly reviews
+  </Card>
+  <Card title="On-Premises">
+    Dedicated support
+    24/7 phone support
+    On-site assistance
+    SLA guarantees
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Compliance & Security"
+    icon="shield"
+    href="/team/compliance"
+  >
+    SOC 2, HIPAA, data residency details
+  </Card>
+  
+  <Card
+    title="Team Management"
+    icon="users"
+    href="/team/management"
+  >
+    Manage users and permissions
+  </Card>
+  
+  <Card
+    title="Pricing"
+    icon="dollar-sign"
+    href="/resources/pricing"
+  >
+    Compare plans and costs
+  </Card>
+  
+  <Card
+    title="Contact Sales"
+    icon="envelope"
+    href="mailto:enterprise@vulnzap.com"
+  >
+    Discuss VPC or on-premises deployment
+  </Card>
+</CardGroup>
+

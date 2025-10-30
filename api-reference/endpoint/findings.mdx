@@ -1,0 +1,165 @@
+---
+title: "Findings"
+description: "Retrieve and manage vulnerability findings"
+api: "GET /v1/findings"
+---
+
+## List Findings
+
+Retrieve all findings for your projects.
+
+<ParamField query="severity" type="string">
+  Filter by severity: `critical`, `high`, `medium`, `low`
+</ParamField>
+
+<ParamField query="status" type="string">
+  Filter by status: `open`, `fixed`, `false_positive`, `ignored`
+</ParamField>
+
+<ParamField query="project_id" type="string">
+  Filter by project
+</ParamField>
+
+<ParamField query="type" type="string">
+  Filter by vulnerability type: `sql_injection`, `xss`, etc.
+</ParamField>
+
+### Request
+
+```bash
+curl "https://api.vulnzap.com/v1/findings?severity=critical&status=open" \
+  -H "Authorization: Bearer vzap_abc123..."
+```
+
+### Response
+
+```json
+{
+  "data": [
+    {
+      "finding_id": "finding_abc123",
+      "severity": "critical",
+      "type": "sql_injection",
+      "status": "open",
+      "file": "src/db/queries.ts",
+      "line": 45,
+      "column": 17,
+      "message": "User input directly concatenated in SQL query",
+      "cwe": "CWE-89",
+      "owasp": "A03:2021",
+      "risk_score": 95,
+      "created_at": "2025-10-19T14:32:11Z",
+      "project_id": "proj_xyz789"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "per_page": 50,
+    "total_count": 12
+  }
+}
+```
+
+## Get Finding Details
+
+Retrieve detailed information about a specific finding.
+
+### Request
+
+```bash
+curl https://api.vulnzap.com/v1/findings/finding_abc123 \
+  -H "Authorization: Bearer vzap_abc123..."
+```
+
+### Response
+
+```json
+{
+  "finding_id": "finding_abc123",
+  "severity": "critical",
+  "type": "sql_injection",
+  "status": "open",
+  "file": "src/db/queries.ts",
+  "line": 45,
+  "column": 17,
+  "function": "getUserById",
+  "message": "User input directly concatenated in SQL query",
+  "description": "SQL injection allows attackers to manipulate database queries...",
+  "cwe": "CWE-89",
+  "owasp": "A03:2021",
+  "cvss_score": 9.8,
+  "risk_score": 95,
+  "code_snippet": "const query = `SELECT * FROM users WHERE id = ${id}`;",
+  "data_flow": {
+    "source": "req.params.id",
+    "sink": "db.execute",
+    "sanitization": null
+  },
+  "fix": {
+    "description": "Use parameterized queries",
+    "code": "const query = 'SELECT * FROM users WHERE id = ?';\ndb.execute(query, [id]);",
+    "auto_applicable": true
+  },
+  "references": [
+    "https://owasp.org/www-community/attacks/SQL_Injection",
+    "https://cwe.mitre.org/data/definitions/89.html"
+  ],
+  "created_at": "2025-10-19T14:32:11Z",
+  "project_id": "proj_xyz789"
+}
+```
+
+## Update Finding Status
+
+Mark finding as fixed, false positive, or ignored.
+
+### Request
+
+```bash
+curl -X PATCH https://api.vulnzap.com/v1/findings/finding_abc123 \
+  -H "Authorization: Bearer vzap_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "fixed",
+    "comment": "Applied parameterized query fix"
+  }'
+```
+
+### Response
+
+```json
+{
+  "finding_id": "finding_abc123",
+  "status": "fixed",
+  "updated_at": "2025-10-19T15:45:23Z"
+}
+```
+
+## Apply Fix
+
+Apply recommended security patch.
+
+### Request
+
+```bash
+curl -X POST https://api.vulnzap.com/v1/findings/finding_abc123/fix \
+  -H "Authorization: Bearer vzap_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "auto_apply": true
+  }'
+```
+
+### Response
+
+```json
+{
+  "finding_id": "finding_abc123",
+  "fix_applied": true,
+  "patch": {
+    "file": "src/db/queries.ts",
+    "diff": "- const query = `SELECT * FROM users WHERE id = ${id}`;\n+ const query = 'SELECT * FROM users WHERE id = ?';\n+ db.execute(query, [id]);"
+  }
+}
+```
+

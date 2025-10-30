@@ -1,80 +1,322 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: "Quick Start"
+description: "Install and scan in under 5 minutes"
+icon: "rocket"
 ---
 
-## Get started in three steps
+## Installation
 
-Get your documentation site running locally and make your first customization.
+<CodeGroup>
 
-### Step 1: Set up your local environment
+```bash npx
+npx vulnzap init
+```
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+```bash npm
+npm i -g vulnzap
+```
 
-### Step 2: Deploy your changes
+```bash yarn
+yarn global add vulnzap
+```
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+</CodeGroup>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+## Setup
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+### 1. Authenticate
 
-### Step 3: Go live
+Set your API key as an environment variable:
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+```bash
+export VULNZAP_API_KEY=your_api_key_here
+```
 
-## Next steps
+Get your API key from [vulnzap.com/dashboard](https://vulnzap.com/dashboard) → Settings → API Keys
 
-Now that you have your docs running, explore these key features:
+<Tip>
+  Your API key should be stored as an environment variable and never committed to your repository.
+</Tip>
+
+### 2. Connect Your Repository
+
+Navigate to your project directory:
+
+```bash
+cd /path/to/your/project
+```
+
+Ensure your `VULNZAP_API_KEY` environment variable is set
+
+### 3. Run Your First Scan
+
+#### Option A: Scan Entire Repository
+
+```bash
+vulnzap scan
+```
+
+This performs a deep sweep of your entire codebase, ranking findings by exploitability.
+
+#### Option B: Scan Specific Files
+
+```bash
+vulnzap scan src/auth.js src/db/queries.ts
+```
+
+#### Option C: Watch Mode (Inline Scanning)
+
+```bash
+vulnzap watch
+```
+
+Automatically scans files as you save them during development.
+
+## View Results
+
+### In the Terminal
+
+Scan results appear immediately in your terminal:
+
+```bash
+╔══════════════════════════════════════════════════════════╗
+║ VulnZap Scan Results                                      ║
+╠══════════════════════════════════════════════════════════╣
+║ Risk Score: 67 (Medium)                                   ║
+║ Total Findings: 8                                         ║
+║   • Critical: 2                                           ║
+║   • High: 3                                               ║
+║   • Medium: 2                                             ║
+║   • Low: 1                                                ║
+╚══════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────┐
+│ CRITICAL: SQL Injection                                  │
+├─────────────────────────────────────────────────────────┤
+│ File: src/db/queries.ts:45                              │
+│ Issue: Unsanitized user input in SQL query              │
+│ Fix Available: Yes                                       │
+└─────────────────────────────────────────────────────────┘
+```
+
+### In the Dashboard
+
+Visit [vulnzap.com/dashboard](https://vulnzap.com/dashboard) to see:
+- Visual risk scoring and trends
+- Detailed vulnerability breakdowns
+- One-click patch application
+- Historical scan data
+
+## Apply Fixes
+
+### Automatic Patching
+
+Apply all recommended fixes at once:
+
+```bash
+vulnzap fix --all
+```
+
+### Selective Patching
+
+Review and apply specific fixes:
+
+```bash
+vulnzap fix --interactive
+```
+
+This opens an interactive prompt where you can:
+- Review each vulnerability
+- See the proposed patch
+- Accept, reject, or modify fixes
+
+### Manual Review
+
+Export patches for manual review:
+
+```bash
+vulnzap fix --export patches/
+```
+
+<Warning>
+  Always review patches before applying them to production code. While VulnZap patches are deterministic and context-aware, understanding the changes ensures they align with your application logic.
+</Warning>
+
+## IDE Integration
+
+For real-time scanning as you code, integrate VulnZap with your IDE:
+
+<Tabs>
+  <Tab title="Cursor">
+    1. Create `.cursor/mcp.json` in your project root
+    2. Add VulnZap configuration:
+    ```json
+    {
+      "mcpServers": {
+        "VulnZap": {
+          "command": "vulnzap",
+          "args": ["secure", "--ide", "cursor"],
+          "env": {
+            "VULNZAP_API_KEY": "your_api_key_here"
+          }
+        }
+      }
+    }
+    ```
+    3. Restart Cursor
+  </Tab>
+  
+  <Tab title="Windsurf">
+    1. Create `.codeium/windsurf/mcp_config.json` in your project root
+    2. Add VulnZap configuration:
+    ```json
+    {
+      "mcpServers": {
+        "VulnZap": {
+          "command": "vulnzap",
+          "args": ["secure", "--ide", "windsurf"],
+          "env": {
+            "VULNZAP_API_KEY": "your_api_key_here"
+          }
+        }
+      }
+    }
+    ```
+    3. Restart Windsurf
+  </Tab>
+  
+  <Tab title="Cline">
+    Configure in Cline settings with your VulnZap API key
+  </Tab>
+</Tabs>
+
+<Check>
+  Once configured, VulnZap will automatically scan AI-generated code and highlight vulnerabilities inline.
+</Check>
+
+## CI/CD Integration
+
+### GitHub Actions
+
+Add VulnZap to your GitHub Actions workflow:
+
+```yaml .github/workflows/vulnzap.yml
+name: VulnZap Security Scan
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Run VulnZap Scan
+        uses: vulnzap/scan-action@v1
+        with:
+          api-key: ${{ secrets.VULNZAP_API_KEY }}
+          fail-on: high # Block PRs with high/critical findings
+          
+      - name: Upload Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: vulnzap-results
+          path: vulnzap-report.json
+```
+
+<Tip>
+  Get your API key from [vulnzap.com/dashboard](https://vulnzap.com/dashboard) and add it to GitHub Secrets at **Settings** → **Secrets and variables** → **Actions**
+</Tip>
+
+### GitLab CI
+
+```yaml .gitlab-ci.yml
+vulnzap:
+  stage: security
+  image: node:18
+  before_script:
+    - npm install -g vulnzap
+  script:
+    - vulnzap scan --format json > vulnzap-report.json
+  artifacts:
+    reports:
+      vulnzap: vulnzap-report.json
+  only:
+    - merge_requests
+    - main
+```
+
+## Next Steps
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card
+    title="Dashboard Guide"
+    icon="chart-line"
+    href="/features/dashboard"
+  >
+    Explore the full dashboard capabilities
+  </Card>
+  
+  <Card
+    title="Security Coverage"
+    icon="shield-check"
+    href="/features/security-coverage"
+  >
+    Learn what vulnerabilities VulnZap detects
+  </Card>
+  
+  <Card
+    title="CLI Reference"
+    icon="terminal"
+    href="/integration/cli"
+  >
+    Master the command-line interface
+  </Card>
+  
+  <Card
+    title="API Documentation"
+    icon="code"
+    href="/api-reference/introduction"
+  >
+    Integrate VulnZap programmatically
+  </Card>
 </CardGroup>
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Authentication Failed">
+    If authentication fails:
+    1. Ensure you're connected to the internet
+    2. Check that your API key is valid at [vulnzap.com/dashboard](https://vulnzap.com/dashboard) → Settings → API Keys
+    3. Verify your `VULNZAP_API_KEY` environment variable is set correctly
+  </Accordion>
+  
+  <Accordion title="No Vulnerabilities Found">
+    If scans return no results:
+    - Verify your language is supported (JS, TS, Python)
+    - Check that files aren't ignored in `.vulnzapignore`
+    - Run with `--verbose` flag for detailed logging
+  </Accordion>
+  
+  <Accordion title="IDE Integration Not Working">
+    For IDE integration issues:
+    1. Verify your MCP configuration file exists (`.cursor/mcp.json` or `.codeium/windsurf/mcp_config.json`)
+    2. Check that VULNZAP_API_KEY is set in the configuration
+    3. Restart your IDE after configuration changes
+    4. See [IDE Integration](/features/ide-integration) for detailed setup
+  </Accordion>
+</AccordionGroup>
+
+<Card
+  title="Still need help?"
+  icon="life-ring"
+  href="mailto:support@vulnzap.com"
+>
+  Contact our support team at support@vulnzap.com
+</Card>

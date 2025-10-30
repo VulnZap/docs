@@ -1,0 +1,578 @@
+---
+title: "IDE Integration"
+description: "Set up real-time security scanning in Cursor, Windsurf, Cline, and VS Code via MCP protocol"
+icon: "code"
+---
+
+## Overview
+
+VulnZap integrates with modern IDEs through the Model Context Protocol (MCP), providing real-time vulnerability detection as you code and when AI assistants generate code.
+
+## Supported IDEs
+
+<CardGroup cols={2}>
+  <Card title="Cursor" icon="c">
+    Full MCP support with agent-aware scanning
+  </Card>
+  <Card title="Windsurf" icon="w">
+    Real-time inline detection and AI guardrails
+  </Card>
+  <Card title="Cline" icon="terminal">
+    Agentic workflow protection
+  </Card>
+  <Card title="VS Code" icon="code">
+    Via MCP extension (beta)
+  </Card>
+</CardGroup>
+
+## Model Context Protocol (MCP)
+
+VulnZap's IDE integration uses MCP to:
+- Intercept AI-generated code before application
+- Analyze code changes in real-time
+- Provide inline security annotations
+- Suggest secure alternatives to AI assistants
+
+### How It Works
+
+<Steps>
+  <Step title="Code Generation">
+    User prompts AI assistant or edits code manually
+  </Step>
+  
+  <Step title="MCP Intercept">
+    VulnZap receives the code diff via MCP
+  </Step>
+  
+  <Step title="Real-Time Analysis">
+    Scanning engine analyzes for vulnerabilities (<100ms)
+  </Step>
+  
+  <Step title="Inline Feedback">
+    Issues highlighted directly in editor
+  </Step>
+  
+  <Step title="AI Enhancement">
+    For AI-generated code, VulnZap suggests secure alternatives
+  </Step>
+  
+  <Step title="Secure Application">
+    Fixed code applied automatically or with user confirmation
+  </Step>
+</Steps>
+
+## Installation
+
+### Cursor
+
+<Steps>
+  <Step title="Install VulnZap CLI">
+    ```bash
+    npm i -g vulnzap
+    ```
+  </Step>
+  
+  <Step title="Get API Key">
+    Get your API key from [vulnzap.com/dashboard](https://vulnzap.com/dashboard) → Settings → API Keys
+  </Step>
+  
+  <Step title="Create MCP Configuration">
+    Create `.cursor/mcp.json` in your project root:
+    
+    ```json
+    {
+      "mcpServers": {
+        "VulnZap": {
+          "command": "vulnzap",
+          "args": ["secure", "--ide", "cursor"],
+          "env": {
+            "VULNZAP_API_KEY": "your_api_key_here"
+          }
+        }
+      }
+    }
+    ```
+  </Step>
+  
+  <Step title="Restart Cursor">
+    Restart Cursor to activate VulnZap integration
+  </Step>
+</Steps>
+
+### Windsurf
+
+<Steps>
+  <Step title="Install VulnZap CLI">
+    ```bash
+    npm i -g vulnzap
+    ```
+  </Step>
+  
+  <Step title="Get API Key">
+    Get your API key from [vulnzap.com/dashboard](https://vulnzap.com/dashboard) → Settings → API Keys
+  </Step>
+  
+  <Step title="Create MCP Configuration">
+    Create `.codeium/windsurf/mcp_config.json` in your project root:
+    
+    ```json
+    {
+      "mcpServers": {
+        "VulnZap": {
+          "command": "vulnzap",
+          "args": ["secure", "--ide", "windsurf"],
+          "env": {
+            "VULNZAP_API_KEY": "your_api_key_here"
+          }
+        }
+      }
+    }
+    ```
+  </Step>
+  
+  <Step title="Restart Windsurf">
+    Restart Windsurf to activate VulnZap integration
+  </Step>
+</Steps>
+
+### Cline
+
+<Steps>
+  <Step title="Install VulnZap CLI">
+    ```bash
+    npm i -g vulnzap
+    ```
+  </Step>
+  
+  <Step title="Get API Key">
+    Get your API key from [vulnzap.com/dashboard](https://vulnzap.com/dashboard) → Settings → API Keys
+  </Step>
+  
+  <Step title="Configure in Cline">
+    Set your `VULNZAP_API_KEY` environment variable and configure Cline to use VulnZap
+  </Step>
+</Steps>
+
+### VS Code (Beta)
+
+<Steps>
+  <Step title="Install MCP Extension">
+    Install the MCP Protocol extension from VS Code Marketplace
+  </Step>
+  
+  <Step title="Install VulnZap">
+    ```bash
+    npm i -g vulnzap
+    vulnzap auth
+    ```
+  </Step>
+  
+  <Step title="Configure MCP Servers">
+    Open VS Code settings.json and add:
+    
+    ```json
+    {
+      "mcp.servers": {
+        "vulnzap": {
+          "command": "vulnzap",
+          "args": ["mcp"],
+          "enabled": true
+        }
+      }
+    }
+    ```
+  </Step>
+  
+  <Step title="Reload VS Code">
+    Reload window (Cmd/Ctrl + Shift + P → "Reload Window")
+  </Step>
+</Steps>
+
+<Warning>
+  VS Code integration is currently in beta. Full support requires the MCP extension.
+</Warning>
+
+## Features
+
+### Real-Time Inline Scanning
+
+Code is scanned as you type or save:
+
+```javascript
+app.get('/users/:id', (req, res) => {
+  const query = `SELECT * FROM users WHERE id = ${req.params.id}`;
+  //            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  //            ⚠️ VulnZap: SQL Injection (Critical)
+  //            User input directly concatenated in SQL query
+  //            [Quick Fix] [View Details] [Ignore]
+  
+  db.execute(query);
+});
+```
+
+**Inline Actions:**
+- **Quick Fix**: Apply recommended patch
+- **View Details**: Open full vulnerability explanation
+- **Ignore**: Suppress warning (with reason)
+
+### AI Code Generation Protection
+
+VulnZap intercepts AI-generated code:
+
+**Example Session:**
+
+```
+User: "Create a file upload endpoint"
+
+AI generates:
+app.post('/upload', (req, res) => {
+  const filename = req.body.filename;
+  fs.writeFileSync(`./uploads/${filename}`, req.body.content);
+  res.send('Uploaded');
+});
+
+🛡️ VulnZap intercepts:
+❌ Path Traversal: filename not validated
+❌ Missing file type validation
+❌ No file size limits
+
+🤖 VulnZap suggests to AI:
+"The file upload has security issues. Use these patterns:
+1. Validate and sanitize filename
+2. Check file type whitelist
+3. Limit file size
+4. Use secure file storage"
+
+AI regenerates secure version:
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+  destination: './uploads/',
+  filename: (req, file, cb) => {
+    const safeName = path.basename(file.originalname);
+    cb(null, `${Date.now()}-${safeName}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'application/pdf'];
+    cb(null, allowed.includes(file.mimetype));
+  }
+});
+
+app.post('/upload', upload.single('file'), (req, res) => {
+  res.send('Uploaded securely');
+});
+
+✅ VulnZap approves secure code
+```
+
+### Package Installation Monitoring
+
+VulnZap checks packages before installation:
+
+```bash
+npm install lodash@4.17.15
+```
+
+**VulnZap Alert:**
+
+```
+⚠️  Vulnerable Package Detected
+
+Package: lodash@4.17.15
+CVE: CVE-2020-8203 (Prototype Pollution)
+Severity: High (CVSS 7.4)
+Affected Versions: < 4.17.21
+Fix: Upgrade to lodash@4.17.21
+
+[Block Installation] [Install Anyway] [View CVE Details]
+```
+
+### Diff Highlighting
+
+Visual indicators for vulnerability severity:
+
+```javascript
+function authenticate(username, password) {
+  const user = db.query(
+    `SELECT * FROM users WHERE 
+     username='${username}' AND 
+     password='${password}'`
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~  ⚠️ Critical: SQL Injection
+  );
+  
+  if (user) {
+    res.cookie('session', username);
+                          ~~~~~~~~  ⚠️ High: Predictable session ID
+  }
+  
+  return user;
+}
+```
+
+**Severity Colors:**
+- 🔴 **Critical**: Red underline
+- 🟠 **High**: Orange underline  
+- 🟡 **Medium**: Yellow underline
+- 🟢 **Low**: Blue info
+
+### Code Actions
+
+Right-click on highlighted code for quick actions:
+
+<img src="/images/code-actions.png" alt="Code Actions Menu" />
+
+**Available Actions:**
+- **Apply Fix**: One-click patch application
+- **Explain Vulnerability**: Detailed explanation with examples
+- **View in Dashboard**: Open in web dashboard
+- **Ignore This Instance**: Suppress with justification
+- **Ignore This Rule**: Disable rule globally or per-file
+
+### Hover Tooltips
+
+Hover over vulnerabilities for quick info:
+
+```
+╔════════════════════════════════════════════════════════╗
+║ SQL Injection (CWE-89)                                 ║
+║ Severity: Critical                                     ║
+╠════════════════════════════════════════════════════════╣
+║ User input directly concatenated in SQL query          ║
+║                                                        ║
+║ Attacker can manipulate query to:                     ║
+║  • Access unauthorized data                           ║
+║  • Modify or delete data                              ║
+║  • Bypass authentication                              ║
+║                                                        ║
+║ Fix: Use parameterized queries                        ║
+║                                                        ║
+║ [Apply Fix] [Learn More] [Ignore]                     ║
+╚════════════════════════════════════════════════════════╝
+```
+
+### Status Bar
+
+Real-time security posture in status bar:
+
+```
+🛡️ VulnZap: 3 issues (1 Critical, 2 High)
+```
+
+Click to open **VulnZap Panel** with full findings list.
+
+### Side Panel
+
+Dedicated VulnZap panel shows all findings in current workspace:
+
+```
+┌─────────────────────────────────────────────┐
+│ VulnZap Findings                            │
+├─────────────────────────────────────────────┤
+│ 🔴 CRITICAL (1)                             │
+│   └─ SQL Injection                          │
+│      src/db/queries.ts:45                   │
+│      [Fix] [Details]                        │
+│                                             │
+│ 🟠 HIGH (2)                                 │
+│   ├─ XSS                                    │
+│   │  src/components/Profile.tsx:78          │
+│   │  [Fix] [Details]                        │
+│   │                                         │
+│   └─ Path Traversal                         │
+│      src/api/files.ts:34                    │
+│      [Fix] [Details]                        │
+│                                             │
+│ 🟡 MEDIUM (0)                               │
+│ 🟢 LOW (0)                                  │
+│                                             │
+│ [Scan Now] [Fix All] [Settings]            │
+└─────────────────────────────────────────────┘
+```
+
+## Configuration
+
+### Per-Workspace Settings
+
+Create `.vscode/vulnzap.json`:
+
+```json
+{
+  "enabled": true,
+  "scanOnSave": true,
+  "scanOnType": false,
+  "minSeverity": "high",
+  "autoFix": false,
+  "showInlineErrors": true,
+  "showStatusBar": true,
+  "excludePatterns": [
+    "**/*.test.ts",
+    "**/node_modules/**",
+    "**/dist/**"
+  ],
+  "notifications": {
+    "critical": true,
+    "high": true,
+    "medium": false,
+    "low": false
+  }
+}
+```
+
+### Global Settings
+
+Configure in IDE settings:
+
+**Cursor:**
+```json settings.json
+{
+  "vulnzap.enabled": true,
+  "vulnzap.apiKey": "vzap_...",
+  "vulnzap.scanOnSave": true,
+  "vulnzap.minSeverity": "medium",
+  "vulnzap.aiGuardrails": true
+}
+```
+
+**Windsurf:**
+Settings → Tools → VulnZap → Configure
+
+**Cline:**
+Integrations → Security → VulnZap → Settings
+
+## Keyboard Shortcuts
+
+Default shortcuts (customizable):
+
+| Action | Shortcut (Mac) | Shortcut (Windows/Linux) |
+|--------|----------------|--------------------------|
+| Scan File | `Cmd+Shift+V S` | `Ctrl+Shift+V S` |
+| Fix All | `Cmd+Shift+V F` | `Ctrl+Shift+V F` |
+| Next Issue | `Cmd+Shift+V N` | `Ctrl+Shift+V N` |
+| Previous Issue | `Cmd+Shift+V P` | `Ctrl+Shift+V P` |
+| Open Panel | `Cmd+Shift+V O` | `Ctrl+Shift+V O` |
+| Toggle VulnZap | `Cmd+Shift+V T` | `Ctrl+Shift+V T` |
+
+## Offline Mode
+
+VulnZap can run offline with local vulnerability database:
+
+```bash
+# Download offline database
+vulnzap db download
+
+# Enable offline mode
+vulnzap config set offline true
+```
+
+<Info>
+  Offline mode has slightly reduced detection accuracy but provides basic protection without internet.
+</Info>
+
+## Performance
+
+IDE integration is designed for minimal performance impact:
+
+| Operation | Latency | Notes |
+|-----------|---------|-------|
+| Inline scan (on type) | <50ms | Debounced 300ms |
+| File scan (on save) | <100ms | Full file analysis |
+| AI code intercept | <100ms | Before code application |
+| Package check | <200ms | Cached lookups |
+
+**Performance Settings:**
+
+```json
+{
+  "vulnzap.performance": {
+    "debounceMs": 300,
+    "maxFileSizeKB": 500,
+    "enableCaching": true,
+    "parallel": true
+  }
+}
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="VulnZap Not Showing in IDE">
+    **Solutions:**
+    1. Verify MCP server is running: `vulnzap mcp status`
+    2. Check API key is valid: `vulnzap auth verify`
+    3. Restart IDE completely
+    4. Check IDE logs for MCP errors
+    5. Reinstall: `npm uninstall -g vulnzap && npm install -g vulnzap`
+  </Accordion>
+  
+  <Accordion title="Scans Not Running">
+    **Check:**
+    - Is `scanOnSave` enabled in settings?
+    - Is the file type supported (JS/TS/Python)?
+    - Is the file excluded in `.vulnzapignore`?
+    - Check status bar for error messages
+    - Run manual scan: `Cmd/Ctrl+Shift+V S`
+  </Accordion>
+  
+  <Accordion title="High CPU Usage">
+    **Solutions:**
+    1. Disable `scanOnType`, use only `scanOnSave`
+    2. Exclude large files: `maxFileSizeKB: 500`
+    3. Exclude test files and generated code
+    4. Reduce `maxThreads` in config
+    5. Use incremental scanning
+  </Accordion>
+  
+  <Accordion title="False Positives">
+    **Actions:**
+    1. Right-click → **Ignore This Instance** (with reason)
+    2. Create suppression comment:
+       ```javascript
+       // vulnzap-disable-next-line sql-injection
+       const query = buildDynamicQuery();
+       ```
+    3. Report false positive in dashboard for ML improvement
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="CLI Guide"
+    icon="terminal"
+    href="/integration/cli"
+  >
+    Master command-line scanning
+  </Card>
+  
+  <Card
+    title="CI/CD Integration"
+    icon="code-branch"
+    href="/integration/ci-cd"
+  >
+    Automate security in pipelines
+  </Card>
+  
+  <Card
+    title="Security Coverage"
+    icon="shield"
+    href="/features/security-coverage"
+  >
+    Learn what VulnZap detects
+  </Card>
+  
+  <Card
+    title="Dashboard Guide"
+    icon="chart-line"
+    href="/features/dashboard"
+  >
+    Manage findings centrally
+  </Card>
+</CardGroup>
+

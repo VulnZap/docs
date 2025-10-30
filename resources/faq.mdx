@@ -1,0 +1,512 @@
+---
+title: "Frequently Asked Questions"
+description: "Common questions about VulnZap security scanning"
+icon: "question"
+---
+
+## General
+
+<AccordionGroup>
+  <Accordion title="What is VulnZap?">
+    VulnZap is a security layer for agentic coding that provides real-time vulnerability scanning for AI-generated and human-written code. It detects security issues, suggests fixes, and integrates with popular IDEs and CI/CD pipelines.
+    
+    **Key Features:**
+    - Real-time scanning as you code
+    - AI-aware (understands agent-generated code)
+    - OWASP Top 10 aligned detection
+    - Automatic patch generation
+    - MCP protocol integration for IDE/AI assistants
+  </Accordion>
+  
+  <Accordion title="How is VulnZap different from Snyk, Veracode, or other SAST tools?">
+    **Key Differentiators:**
+    
+    1. **Agent-Aware**: VulnZap understands AI coding assistants and can guide them to generate secure code
+    2. **MCP Protocol**: Native integration with Cursor, Windsurf, Cline
+    3. **Real-Time Feedback**: <100ms inline scanning as you type
+    4. **Deterministic Patches**: Context-aware fixes that preserve code style
+    5. **Low False Positives**: Exploitability-first ranking (<5% FP rate vs industry average of 20-30%)
+    6. **Developer-First**: Built for developer velocity, not just security teams
+    
+    **Traditional SAST:** Post-commit scanning, high false positives, generic fixes
+    
+    **VulnZap:** Pre-commit prevention, low noise, intelligent fixes
+  </Accordion>
+  
+  <Accordion title="Does VulnZap support my programming language?">
+    **Currently Supported (Production):**
+    - ✅ JavaScript (ES5 - ES2024)
+    - ✅ TypeScript (3.x - 5.x)
+    - ✅ Python (3.7+)
+    
+    **Coming Soon:**
+    - 🔄 Go (Q1 2025)
+    - 🔄 Rust (Q1 2025)
+    - 🔄 Java (Q2 2025)
+    - 📋 .NET, Ruby, PHP, Swift (2025 roadmap)
+    
+    See [Supported Languages](/resources/supported-languages) for details.
+  </Accordion>
+  
+  <Accordion title="Is VulnZap open source?">
+    VulnZap is a **commercial product** with some open-source components:
+    
+    - **Core scanning engine**: Proprietary
+    - **MCP integration**: Open-source (MIT)
+    - **IDE extensions**: Open-source (Apache 2.0)
+    - **Detection rules**: Community contributions welcome
+    
+    For Enterprise customers, source code review is available under NDA.
+  </Accordion>
+</AccordionGroup>
+
+## Security & Privacy
+
+<AccordionGroup>
+  <Accordion title="Does VulnZap store my source code?">
+    **No, by default VulnZap never stores your source code.**
+    
+    **What we store:**
+    - Metadata (file paths, line numbers, vulnerability types)
+    - Findings and scan results
+    - Risk scores and trends
+    
+    **What we don't store:**
+    - Full source code
+    - Code snippets (unless you opt-in for context in findings)
+    - Secrets or credentials
+    
+    **Enterprise Options:**
+    - VPC deployment: Code never leaves your infrastructure
+    - On-premises: Complete air-gapped deployment
+    
+    See [Compliance & Security](/team/compliance) for details.
+  </Accordion>
+  
+  <Accordion title="Is VulnZap SOC 2 compliant?">
+    **Yes.** VulnZap maintains SOC 2 Type II certification covering all five Trust Service Criteria:
+    - Security
+    - Availability
+    - Processing Integrity
+    - Confidentiality
+    - Privacy
+    
+    SOC 2 reports available under NDA to Enterprise customers.
+    
+    **Other Certifications:**
+    - GDPR compliant
+    - HIPAA eligible (Enterprise on-premises)
+    - ISO 27001 (in progress)
+  </Accordion>
+  
+  <Accordion title="Can VulnZap be used in air-gapped environments?">
+    **Yes.** Enterprise customers can deploy VulnZap fully on-premises with:
+    
+    - Offline vulnerability database
+    - No internet connectivity required
+    - Manual update packages
+    - Complete data sovereignty
+    
+    Contact enterprise@vulnzap.com for air-gapped deployment.
+  </Accordion>
+  
+  <Accordion title="How do you handle secrets found in code?">
+    When VulnZap detects hardcoded secrets:
+    
+    1. **Immediate Alert**: Critical severity finding
+    2. **Redacted in Logs**: Secret values never logged or stored
+    3. **Rotation Guidance**: Step-by-step remediation
+    4. **Git History Scan**: Check for leaked secrets in commits
+    
+    **Supported Secret Types:**
+    - API keys
+    - Database passwords
+    - AWS/GCP/Azure credentials
+    - Private keys
+    - OAuth tokens
+    - JWT secrets
+  </Accordion>
+</AccordionGroup>
+
+## Pricing & Plans
+
+<AccordionGroup>
+  <Accordion title="What's included in the Free plan?">
+    **Free Plan Includes:**
+    - 5,000 package scans/month
+    - 10,000 line scans/month
+    - 1 user
+    - 5 projects
+    - JavaScript, TypeScript, Python support
+    - CLI access
+    - IDE integration
+    - 7 days data retention
+    - Community support
+    
+    **Perfect for:** Individual developers, small projects, learning
+    
+    **Limitations:**
+    - No API access
+    - No CI/CD integration
+    - No team collaboration
+  </Accordion>
+  
+  <Accordion title="Do unused scans roll over to the next month?">
+    **No.** Scan quotas reset each billing period.
+    
+    However:
+    - **Cached scans don't count**: Unchanged files skip re-scanning
+    - **Incremental scans**: Only changed lines counted
+    - **No surprise charges**: Warnings at 80% and 95% usage
+    
+    **Overages (Standard/Scale):**
+    - Standard: $0.10 per 1,000 additional lines
+    - Scale: $0.05 per 1,000 additional lines
+    - Enterprise: Unlimited (no overages)
+  </Accordion>
+  
+  <Accordion title="Can I upgrade or downgrade mid-cycle?">
+    **Yes.**
+    
+    - **Upgrade**: Takes effect immediately, prorated charge
+    - **Downgrade**: Takes effect at next billing cycle
+    - **Add seats**: Immediate, prorated charge
+    - **Remove seats**: Effective next cycle
+    
+    **No lock-in:** Cancel anytime, no penalties.
+  </Accordion>
+  
+  <Accordion title="Do you offer discounts for students, open source, or non-profits?">
+    **Yes!**
+    
+    **Students/Academic:** 50% off Standard or Scale
+    - Email: education@vulnzap.com
+    - Require: .edu email verification
+    
+    **Open Source:** Free Standard plan
+    - Email: opensource@vulnzap.com
+    - Require: Public repo with OSS license
+    
+    **Non-Profit:** 30% off Standard or Scale
+    - Email: nonprofits@vulnzap.com
+    - Require: 501(c)(3) verification
+    
+    **Startups:** Custom pricing
+    - Email: sales@vulnzap.com
+    - For early-stage startups (<2 years, <$1M revenue)
+  </Accordion>
+</AccordionGroup>
+
+## Features & Usage
+
+<AccordionGroup>
+  <Accordion title="What is agent-aware scanning?">
+    **Agent-aware scanning** means VulnZap understands when code is generated by AI assistants (Cursor, GitHub Copilot, etc.) and can:
+    
+    1. **Intercept** AI-generated code before it's applied
+    2. **Analyze** for security vulnerabilities
+    3. **Provide feedback** to the AI with secure alternatives
+    4. **Guide** the AI to regenerate secure code
+    
+    **Example:**
+    AI generates SQL injection → VulnZap detects → Suggests parameterized queries → AI regenerates secure code → Applied to editor
+    
+    **Requires:** MCP protocol integration (Cursor, Windsurf, Cline)
+  </Accordion>
+  
+  <Accordion title="Can VulnZap automatically fix vulnerabilities?">
+    **Yes.** VulnZap generates context-aware patches for most vulnerabilities.
+    
+    **Auto-Fix Capabilities:**
+    - **SQL Injection**: Parameterized queries
+    - **XSS**: HTML escaping, sanitization
+    - **Path Traversal**: Path normalization
+    - **Command Injection**: Safe execution methods
+    - **Weak Crypto**: Strong algorithms
+    - **And 40+ more patterns**
+    
+    **Application Methods:**
+    - **Interactive**: Review each fix before applying
+    - **Automatic**: Apply all fixes at once (use with caution)
+    - **Export**: Generate patches for manual review
+    
+    **Success Rate:** ~85% of findings have auto-applicable fixes
+  </Accordion>
+  
+  <Accordion title="How accurate is VulnZap? What about false positives?">
+    **Accuracy Metrics:**
+    - **True Positive Rate**: >95%
+    - **False Positive Rate**: <5%
+    - **Detection Coverage**: OWASP Top 10 + 200+ vulnerability types
+    
+    **How we achieve low false positives:**
+    1. **Data Flow Analysis**: Track actual data flow, not just patterns
+    2. **Framework Awareness**: Understand security controls in frameworks
+    3. **Exploitability Ranking**: Focus on reachable, exploitable issues
+    4. **Continuous Learning**: ML models improve from user feedback
+    
+    **Industry Comparison:**
+    - Traditional SAST: 20-30% false positive rate
+    - VulnZap: <5% false positive rate
+  </Accordion>
+  
+  <Accordion title="Does VulnZap work with monorepos?">
+    **Yes.** VulnZap fully supports monorepos with:
+    
+    - **Multi-language detection**: Different languages in same repo
+    - **Workspace support**: Multiple packages/projects
+    - **Selective scanning**: Scan specific workspaces
+    - **Cross-project analysis**: Understand dependencies
+    
+    **Performance:**
+    - Incremental scanning only checks changed workspaces
+    - Parallel scanning across workspaces
+    - Caching prevents re-scanning unchanged code
+    
+    **Example Monorepo Support:**
+    - Nx
+    - Lerna
+    - Turborepo
+    - Yarn Workspaces
+    - npm Workspaces
+  </Accordion>
+  
+  <Accordion title="Can I customize detection rules?">
+    **Yes, on Scale and Enterprise plans.**
+    
+    **Custom Rules Include:**
+    - **Custom security patterns**: Your organization's security standards
+    - **Framework-specific rules**: Internal framework security requirements
+    - **Suppression rules**: Ignore specific patterns with justification
+    - **Severity adjustments**: Customize risk scoring
+    
+    **Example Custom Rule:**
+    ```yaml
+    - id: require-auth-middleware
+      severity: high
+      pattern: |
+        app.$METHOD($PATH, ($REQ, $RES) => { ... })
+      where:
+        - not: app.$METHOD($PATH, authenticate, ...)
+      message: "API routes must use authentication middleware"
+    ```
+    
+    **Contact:** enterprise@vulnzap.com for custom rule development
+  </Accordion>
+</AccordionGroup>
+
+## Integration
+
+<AccordionGroup>
+  <Accordion title="Which IDEs are supported?">
+    **Fully Supported:**
+    - ✅ Cursor (full MCP integration)
+    - ✅ Windsurf (full MCP integration)
+    - ✅ Cline (full MCP integration)
+    - ✅ VS Code (via MCP extension, beta)
+    
+    **Coming Soon:**
+    - 🔄 JetBrains IDEs (IntelliJ, PyCharm, WebStorm) - Q2 2025
+    - 🔄 Sublime Text - Q3 2025
+    - 🔄 Vim/Neovim - Q3 2025
+    
+    **Even without IDE support**, you can use:
+    - CLI watch mode: `vulnzap watch`
+    - Pre-commit hooks
+    - CI/CD integration
+  </Accordion>
+  
+  <Accordion title="How does VulnZap integrate with CI/CD?">
+    **Supported CI/CD Platforms:**
+    - ✅ GitHub Actions
+    - ✅ GitLab CI
+    - ✅ CircleCI
+    - ✅ Jenkins
+    - ✅ Azure Pipelines
+    - ✅ Bitbucket Pipelines
+    - ✅ Travis CI
+    - ✅ Any platform with CLI access
+    
+    **Integration Features:**
+    - **Automatic PR comments** with findings
+    - **Merge blocking** on high/critical issues
+    - **SARIF upload** to GitHub Security tab
+    - **Fast incremental scans** (<10s typically)
+    - **Configurable fail conditions**
+    
+    See [CI/CD Integration](/integration/ci-cd) for setup guides.
+  </Accordion>
+  
+  <Accordion title="Can VulnZap integrate with our ticketing system (Jira, Linear, etc.)?">
+    **Yes, via API or webhooks.**
+    
+    **Direct Integrations (Enterprise):**
+    - Jira (automatic issue creation)
+    - Linear (task creation)
+    - ServiceNow (incident creation)
+    
+    **Webhook Integration (All Paid Plans):**
+    ```javascript
+    // Your webhook endpoint
+    app.post('/webhooks/vulnzap', (req, res) => {
+      const { event, data } = req.body;
+      
+      if (event === 'finding.created' && data.severity === 'critical') {
+        // Create Jira ticket
+        jira.createIssue({
+          project: 'SEC',
+          summary: `Critical: ${data.type}`,
+          description: `${data.message}\n\nFile: ${data.file}:${data.line}`
+        });
+      }
+    });
+    ```
+    
+    Contact: integrations@vulnzap.com for custom integrations
+  </Accordion>
+</AccordionGroup>
+
+## Technical
+
+<AccordionGroup>
+  <Accordion title="What is the MCP protocol?">
+    **MCP (Model Context Protocol)** is an open standard that enables AI assistants to communicate with external tools and receive context-aware feedback.
+    
+    **How VulnZap uses MCP:**
+    1. AI assistant (Cursor, etc.) generates code
+    2. MCP sends code to VulnZap before applying
+    3. VulnZap analyzes for vulnerabilities
+    4. MCP sends security feedback back to AI
+    5. AI regenerates secure code
+    6. Secure code applied to editor
+    
+    **Benefits:**
+    - Real-time security without slowing development
+    - AI learns from security feedback
+    - Prevents insecure code before it's written
+    
+    See [MCP Protocol](/integration/mcp-protocol) for technical details.
+  </Accordion>
+  
+  <Accordion title="How fast are scans?">
+    **Performance Benchmarks:**
+    
+    - **Inline (single file)**: <100ms
+    - **Small repo** (100 files, 10K LOC): 5-10 seconds
+    - **Medium repo** (1,000 files, 100K LOC): 20-40 seconds
+    - **Large repo** (10,000 files, 1M LOC): 2-5 minutes
+    
+    **Incremental scans (CI/CD):**
+    - Typical PR (10-20 changed files): <10 seconds
+    
+    **Optimization Features:**
+    - Caching (unchanged files skip analysis)
+    - Incremental mode (only changed files)
+    - Parallel scanning (multi-core)
+    - AST reuse (syntax trees cached)
+  </Accordion>
+  
+  <Accordion title="Does VulnZap work offline?">
+    **Yes, with limitations.**
+    
+    **Offline Mode (Enterprise):**
+    - Download vulnerability database locally
+    - Run scans without internet
+    - Manual updates via offline packages
+    - 95% of online functionality
+    
+    **Setup:**
+    ```bash
+    vulnzap db download
+    vulnzap config set offline true
+    vulnzap scan  # Works offline
+    ```
+    
+    **Limitations:**
+    - No real-time CVE updates
+    - No cloud dashboard sync
+    - No webhooks
+    - No team collaboration features
+    
+    **Best for:** Air-gapped environments, secure facilities
+  </Accordion>
+  
+  <Accordion title="Can I run VulnZap in my own infrastructure?">
+    **Yes.**
+    
+    **Deployment Options:**
+    
+    1. **VulnZap Cloud (SaaS)**: Fully managed, all plans
+    2. **VPC Deployment**: Your AWS/GCP/Azure, Scale+ plans
+    3. **On-Premises**: Your data center, Enterprise only
+    
+    **VPC/On-Prem Benefits:**
+    - Source code never leaves your infrastructure
+    - Custom compliance requirements
+    - Data residency control
+    - Air-gapped deployment option
+    
+    See [Deployment Options](/team/deployment-options) for details.
+  </Accordion>
+</AccordionGroup>
+
+## Support
+
+<AccordionGroup>
+  <Accordion title="What support is included?">
+    **Support by Plan:**
+    
+    - **Free**: Community forum, documentation
+    - **Standard**: Email support (48h response SLA)
+    - **Scale**: Priority email (24h SLA), Slack channel
+    - **Enterprise**: 24/7 phone support, dedicated success manager, <4h SLA
+    
+    **All Plans Include:**
+    - Comprehensive documentation
+    - Knowledge base
+    - Video tutorials
+    - Community forum
+    - Status page
+  </Accordion>
+  
+  <Accordion title="How do I report a security vulnerability in VulnZap itself?">
+    **Responsible Disclosure:**
+    
+    1. **Email:** security@vulnzap.com
+    2. **PGP Key:** Available at vulnzap.com/security.txt
+    3. **Timeline:** Response within 48 hours
+    4. **Bug Bounty:** Available for verified issues
+    
+    **Please DO NOT:**
+    - Open public GitHub issues
+    - Disclose publicly before we've patched
+    - Test on production systems
+    
+    **We Promise:**
+    - Acknowledgment within 48 hours
+    - Regular updates on fix progress
+    - Credit in security advisory (if desired)
+    - Coordinated disclosure (90-day timeline)
+  </Accordion>
+</AccordionGroup>
+
+## Still Have Questions?
+
+<CardGroup cols={2}>
+  <Card title="Contact Sales" icon="envelope" href="mailto:sales@vulnzap.com">
+    sales@vulnzap.com
+  </Card>
+  
+  <Card title="Technical Support" icon="life-ring" href="mailto:support@vulnzap.com">
+    support@vulnzap.com
+  </Card>
+  
+  <Card title="Documentation" icon="book" href="/">
+    Search full documentation
+  </Card>
+  
+  <Card title="Community Forum" icon="comments" href="https://community.vulnzap.com">
+    Ask the community
+  </Card>
+</CardGroup>
+

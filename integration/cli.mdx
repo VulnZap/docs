@@ -1,0 +1,190 @@
+---
+title: "CLI Reference"
+description: "Command-line interface documentation for VulnZap"
+icon: "terminal"
+---
+
+## Installation
+
+Install VulnZap globally:
+
+```bash
+npm i -g vulnzap
+```
+
+Or use via npx:
+
+```bash
+npx vulnzap init
+```
+
+## Authentication
+
+Set your API key as an environment variable:
+
+```bash
+export VULNZAP_API_KEY="your_api_key_here"
+```
+
+Get your API key from [vulnzap.com/dashboard](https://vulnzap.com/dashboard) → Settings → API Keys
+
+<Tip>
+  Add `VULNZAP_API_KEY` to your shell profile (`~/.bashrc`, `~/.zshrc`) to persist across sessions
+</Tip>
+
+## Commands
+
+### `vulnzap scan`
+
+Scan your codebase for security vulnerabilities.
+
+```bash
+# Scan entire repository
+vulnzap scan
+
+# Scan specific files
+vulnzap scan src/auth.js src/db/queries.ts
+
+# Scan directory
+vulnzap scan src/
+```
+
+### `vulnzap secure --ide <ide_name>`
+
+Enable MCP integration for IDE security scanning.
+
+**Supported IDEs:**
+
+```bash
+# For Cursor
+vulnzap secure --ide cursor
+
+# For Windsurf
+vulnzap secure --ide windsurf
+```
+
+This command is used in MCP configuration files (`.cursor/mcp.json` or `.codeium/windsurf/mcp_config.json`).
+
+## IDE Integration
+
+### Cursor
+
+Create `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "VulnZap": {
+      "command": "vulnzap",
+      "args": ["secure", "--ide", "cursor"],
+      "env": {
+        "VULNZAP_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+### Windsurf
+
+Create `.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "VulnZap": {
+      "command": "vulnzap",
+      "args": ["secure", "--ide", "windsurf"],
+      "env": {
+        "VULNZAP_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml
+- name: Run VulnZap Scan
+  run: vulnzap scan
+  env:
+    VULNZAP_API_KEY: ${{ secrets.VULNZAP_API_KEY }}
+```
+
+### GitLab CI
+
+```yaml
+vulnzap:
+  script:
+    - npm install -g vulnzap
+    - vulnzap scan
+  variables:
+    VULNZAP_API_KEY: $VULNZAP_API_KEY
+```
+
+## Environment Variables
+
+<ParamField path="VULNZAP_API_KEY" type="string" required>
+  Your VulnZap API key for authentication
+</ParamField>
+
+## Getting Help
+
+For issues or questions:
+
+<CardGroup cols={2}>
+  <Card
+    title="Documentation"
+    icon="book"
+    href="https://vulnzap.com/docs"
+  >
+    Complete documentation
+  </Card>
+  
+  <Card
+    title="Support"
+    icon="life-ring"
+    href="mailto:support@vulnzap.com"
+  >
+    Contact support team
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Get started with VulnZap
+  </Card>
+  
+  <Card
+    title="IDE Integration"
+    icon="code"
+    href="/features/ide-integration"
+  >
+    Set up IDE integration
+  </Card>
+  
+  <Card
+    title="CI/CD Integration"
+    icon="code-branch"
+    href="/integration/ci-cd"
+  >
+    Automate security in pipelines
+  </Card>
+  
+  <Card
+    title="Security Coverage"
+    icon="shield"
+    href="/features/security-coverage"
+  >
+    Learn what VulnZap detects
+  </Card>
+</CardGroup>

@@ -1,0 +1,575 @@
+---
+title: "Team Management"
+description: "Manage users, roles, and permissions across your organization"
+icon: "users"
+---
+
+## Overview
+
+VulnZap provides comprehensive team management features for organizations to collaborate on security, manage access, and maintain audit trails.
+
+<Info>
+  Team features are available on **Standard** plans and above.
+</Info>
+
+## Team Members
+
+### Inviting Team Members
+
+<Steps>
+  <Step title="Navigate to Team Settings">
+    Go to [Dashboard](https://vulnzap.com/dashboard) → **Settings** → **Team**
+  </Step>
+  
+  <Step title="Click Invite Member">
+    Click **Invite Team Member** button
+  </Step>
+  
+  <Step title="Enter Details">
+    - Email address
+    - Role (Owner, Admin, Member, Read-Only)
+    - Projects (optional: limit access to specific projects)
+  </Step>
+  
+  <Step title="Send Invitation">
+    Member receives email invitation with onboarding link
+  </Step>
+  
+  <Step title="Member Accepts">
+    They create account and join your team workspace
+  </Step>
+</Steps>
+
+### Roles and Permissions
+
+<Tabs>
+  <Tab title="Owner">
+    **Full Access**
+    - All Admin permissions
+    - Manage billing and subscriptions
+    - Add/remove team members
+    - Delete organization
+    - Transfer ownership
+    
+    **Limitations:**
+    - Only one owner per organization
+    - Cannot be removed (must transfer ownership first)
+  </Tab>
+  
+  <Tab title="Admin">
+    **Administrative Access**
+    - View all projects and findings
+    - Run scans and apply fixes
+    - Invite/remove team members (except Owner)
+    - Manage API keys
+    - Configure integrations
+    - Access audit logs
+    
+    **Limitations:**
+    - Cannot manage billing
+    - Cannot delete organization
+  </Tab>
+  
+  <Tab title="Member">
+    **Standard Access**
+    - View assigned projects
+    - Run scans
+    - Apply fixes (with approval)
+    - Create API keys (for own use)
+    - View scan history
+    
+    **Limitations:**
+    - Cannot invite members
+    - Cannot access all projects
+    - Cannot modify team settings
+  </Tab>
+  
+  <Tab title="Read-Only">
+    **View-Only Access**
+    - View assigned projects
+    - View findings and reports
+    - Export scan results
+    - View dashboard metrics
+    
+    **Limitations:**
+    - Cannot run scans
+    - Cannot apply fixes
+    - Cannot create API keys
+    - Cannot modify anything
+  </Tab>
+</Tabs>
+
+### Permission Matrix
+
+| Action | Owner | Admin | Member | Read-Only |
+|--------|-------|-------|--------|-----------|
+| View all projects | ✅ | ✅ | ⚠️* | ⚠️* |
+| Run scans | ✅ | ✅ | ✅ | ❌ |
+| Apply fixes | ✅ | ✅ | ⚠️† | ❌ |
+| Invite members | ✅ | ✅ | ❌ | ❌ |
+| Remove members | ✅ | ⚠️‡ | ❌ | ❌ |
+| Manage billing | ✅ | ❌ | ❌ | ❌ |
+| Create API keys | ✅ | ✅ | ⚠️§ | ❌ |
+| Access audit logs | ✅ | ✅ | ❌ | ❌ |
+| Delete organization | ✅ | ❌ | ❌ | ❌ |
+
+**Legend:**
+- ⚠️* Only assigned projects
+- ⚠️† Requires approval on critical findings
+- ⚠️‡ Cannot remove Owner or other Admins
+- ⚠️§ Personal API keys only
+
+## Project Access Control
+
+### Assigning Members to Projects
+
+Limit member access to specific projects:
+
+<Steps>
+  <Step title="Go to Project Settings">
+    Dashboard → **Projects** → Select project → **Settings**
+  </Step>
+  
+  <Step title="Access Control Tab">
+    Navigate to **Access Control** tab
+  </Step>
+  
+  <Step title="Add Members">
+    - Click **Add Member**
+    - Select team member(s)
+    - Choose permission level (Read, Write, Admin)
+  </Step>
+  
+  <Step title="Save Changes">
+    Member now has access to this project only
+  </Step>
+</Steps>
+
+### Project Permission Levels
+
+**Read:**
+- View findings
+- View scan history
+- Export reports
+
+**Write:**
+- Read permissions +
+- Run scans
+- Apply fixes
+- Comment on findings
+
+**Admin:**
+- Write permissions +
+- Project settings
+- Manage project members
+- Delete project
+
+## API Key Management
+
+### Personal API Keys
+
+Each team member can create personal API keys:
+
+```bash
+# Member creates personal key
+vulnzap auth
+```
+
+**Scope:** Limited to projects the member has access to.
+
+**Usage Limits:** Based on team's plan limits (shared quota).
+
+### Shared API Keys
+
+Admins can create shared team API keys:
+
+<Steps>
+  <Step title="Navigate to API Keys">
+    Dashboard → **Settings** → **API Keys**
+  </Step>
+  
+  <Step title="Create Team Key">
+    Click **Create Team API Key**
+  </Step>
+  
+  <Step title="Configure">
+    - **Name**: "CI/CD Pipeline"
+    - **Scope**: All projects or specific projects
+    - **Permissions**: Read-only or Full access
+    - **Expiration**: 90 days, 1 year, or Never
+  </Step>
+  
+  <Step title="Copy Key">
+    ⚠️ **Important**: Copy immediately, won't be shown again
+  </Step>
+</Steps>
+
+**Best Practices:**
+- Use shared keys for CI/CD pipelines
+- Use personal keys for developer workstations
+- Rotate keys every 90 days
+- Revoke keys when members leave
+
+## Audit Trails
+
+### Viewing Audit Logs
+
+Track all team activity:
+
+```bash
+Dashboard → Settings → Audit Logs
+```
+
+**Logged Events:**
+- Member invited/removed
+- Role changed
+- Project access modified
+- API key created/revoked
+- Scan executed
+- Fix applied
+- Settings changed
+- Billing updated
+
+### Example Audit Log
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Timestamp           │ User              │ Action                │
+├─────────────────────────────────────────────────────────────────┤
+│ 2025-10-19 14:32:11 │ admin@example.com │ Created API key       │
+│ 2025-10-19 13:45:03 │ dev@example.com   │ Applied fix (Critical)│
+│ 2025-10-19 12:21:34 │ dev@example.com   │ Ran full repo scan    │
+│ 2025-10-19 09:15:22 │ admin@example.com │ Added project         │
+│ 2025-10-18 16:42:11 │ admin@example.com │ Invited member        │
+│ 2025-10-18 14:28:05 │ owner@example.com │ Upgraded to Scale     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Exporting Audit Logs
+
+For compliance requirements:
+
+```bash
+# Export last 90 days
+GET /api/v1/audit-logs?since=90d&format=csv
+
+# Export specific date range
+GET /api/v1/audit-logs?from=2025-01-01&to=2025-03-31&format=json
+```
+
+**Available Formats:** CSV, JSON, PDF
+
+<Info>
+  Audit log retention period depends on your plan: 7 days (Free), 30 days (Standard), 90 days (Scale), 365 days (Enterprise).
+</Info>
+
+## Notifications
+
+### Team Notification Settings
+
+Configure who gets notified for what:
+
+**Per-User Settings:**
+
+```
+Dashboard → Settings → Notifications
+```
+
+- ✅ New critical findings in my projects
+- ✅ Scan completion (my scans only)
+- ⬜ All team scans
+- ✅ Weekly summary report
+- ⬜ Billing alerts (Admins/Owners only)
+
+**Team-Wide Settings (Admin/Owner):**
+
+```
+Dashboard → Settings → Team → Notifications
+```
+
+- **New Critical Findings**: Notify all team members
+- **Failed Scans**: Notify project owners only
+- **Member Changes**: Notify Admins and Owner
+- **Quota Warnings**: Notify billing contact
+
+### Notification Channels
+
+<Tabs>
+  <Tab title="Email">
+    Individual email notifications:
+    - Immediate for Critical findings
+    - Digest for Medium/Low findings
+    - Weekly summary reports
+  </Tab>
+  
+  <Tab title="Slack">
+    Team Slack integration:
+    
+    ```yaml
+    channels:
+      security: "#security"
+      engineering: "#engineering"
+      alerts: "#alerts"
+    
+    rules:
+      - severity: critical
+        channel: "#alerts"
+        mention: "@security-team"
+      
+      - severity: high
+        channel: "#security"
+      
+      - event: scan_complete
+        channel: "#engineering"
+    ```
+  </Tab>
+  
+  <Tab title="Webhook">
+    Custom webhook for integrations:
+    
+    ```json
+    {
+      "event": "finding.created",
+      "severity": "critical",
+      "project": "my-app",
+      "finding_id": "finding_abc123",
+      "assigned_to": "dev@example.com",
+      "url": "https://vulnzap.com/dashboard/findings/abc123"
+    }
+    ```
+  </Tab>
+  
+  <Tab title="In-App">
+    Real-time notifications in dashboard:
+    - Bell icon in navigation
+    - Badge count
+    - Clickable to view details
+  </Tab>
+</Tabs>
+
+## Collaboration Features
+
+### Comments and Discussions
+
+Team members can discuss findings:
+
+<Steps>
+  <Step title="Open Finding">
+    Click any finding in dashboard
+  </Step>
+  
+  <Step title="Add Comment">
+    Scroll to **Discussion** section
+  </Step>
+  
+  <Step title="@Mention Members">
+    ```
+    @alice can you review this SQL injection fix?
+    I think we need to update all similar queries.
+    ```
+  </Step>
+  
+  <Step title="Member Gets Notified">
+    Alice receives email and in-app notification
+  </Step>
+</Steps>
+
+### Assigning Findings
+
+Assign findings to specific team members:
+
+```
+Finding Details → Assign To → Select Member
+```
+
+**Assigned member receives:**
+- Email notification
+- Task in their dashboard
+- Deadline reminder (optional)
+
+### Fix Approval Workflow
+
+For critical changes, require approval:
+
+**Settings → Team → Approvals:**
+
+```yaml
+approval_required:
+  - severity: critical
+    approvers: 1  # Require 1 approval
+    auto_merge: false
+  
+  - severity: high
+    approvers: 0  # No approval needed
+    auto_merge: true
+```
+
+**Workflow:**
+
+1. Member applies fix to critical finding
+2. Fix marked as "Pending Approval"
+3. Admin/Owner reviews and approves
+4. Fix is applied to codebase
+
+## Team Dashboard
+
+### Overview Metrics
+
+Team-wide security posture:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ Team Security Dashboard                                 │
+├─────────────────────────────────────────────────────────┤
+│ Total Projects: 12                                      │
+│ Active Members: 8                                       │
+│ Overall Risk Score: 34 (Low)                           │
+│                                                         │
+│ This Month:                                            │
+│   Scans: 342                                           │
+│   Findings: 127                                        │
+│   Fixed: 98 (77%)                                      │
+│   Open: 29 (23%)                                       │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Project Health Overview
+
+See all projects at a glance:
+
+| Project | Risk Score | Last Scan | Findings | Owner |
+|---------|-----------|-----------|----------|-------|
+| api-server | 67 (Medium) | 2h ago | 🔴2 🟠5 🟡3 | alice@example.com |
+| frontend | 23 (Low) | 1d ago | 🟢5 | bob@example.com |
+| mobile-app | 45 (Medium) | 3h ago | 🟠3 🟡8 | carol@example.com |
+
+### Member Activity
+
+Track team member contributions:
+
+| Member | Scans Run | Fixes Applied | Projects |
+|--------|-----------|---------------|----------|
+| alice@example.com | 45 | 32 | 3 |
+| bob@example.com | 32 | 28 | 2 |
+| carol@example.com | 28 | 15 | 1 |
+
+## Seat Management
+
+### Adding Seats
+
+As your team grows:
+
+<Steps>
+  <Step title="Go to Billing">
+    Dashboard → **Settings** → **Billing**
+  </Step>
+  
+  <Step title="Manage Seats">
+    Click **Manage Seats**
+  </Step>
+  
+  <Step title="Add Seats">
+    Current: 5 seats ($95/month)
+    Add: 3 more seats
+    New Total: 8 seats ($152/month)
+  </Step>
+  
+  <Step title="Confirm">
+    Prorated billing for current period
+  </Step>
+</Steps>
+
+### Removing Seats
+
+When members leave:
+
+1. Remove member from team
+2. Seat becomes available for new member
+3. At end of billing period, downgrade unused seats
+
+**No immediate charge/refund** - billing adjusts next cycle.
+
+## Single Sign-On (SSO)
+
+<Info>
+  SSO is available on **Enterprise** plans only.
+</Info>
+
+### Supported Providers
+
+- **SAML 2.0**: Okta, Azure AD, OneLogin, Auth0
+- **OAuth 2.0**: Google Workspace, Microsoft 365
+- **LDAP**: Active Directory integration
+
+### Setting Up SSO
+
+Contact enterprise@vulnzap.com for SSO setup assistance.
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Principle of Least Privilege">
+    - Give members minimum necessary access
+    - Use Read-Only role for stakeholders
+    - Limit Admin role to 2-3 people
+    - Regular access reviews quarterly
+  </Accordion>
+  
+  <Accordion title="API Key Hygiene">
+    - Rotate keys every 90 days
+    - Use shared keys for CI/CD only
+    - Revoke keys immediately when members leave
+    - Monitor key usage in audit logs
+  </Accordion>
+  
+  <Accordion title="Project Organization">
+    - Group related projects
+    - Assign clear project owners
+    - Document project security requirements
+    - Regular project health reviews
+  </Accordion>
+  
+  <Accordion title="Communication">
+    - Use comments for async discussions
+    - @mention relevant team members
+    - Set up Slack integration for real-time alerts
+    - Weekly security standup meetings
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Deployment Options"
+    icon="server"
+    href="/team/deployment-options"
+  >
+    Self-hosted and on-premises deployment
+  </Card>
+  
+  <Card
+    title="Compliance & Security"
+    icon="shield"
+    href="/team/compliance"
+  >
+    SOC 2, data residency, audit packs
+  </Card>
+  
+  <Card
+    title="Pricing"
+    icon="dollar-sign"
+    href="/resources/pricing"
+  >
+    Compare plans and pricing
+  </Card>
+  
+  <Card
+    title="Dashboard Guide"
+    icon="chart-line"
+    href="/features/dashboard"
+  >
+    Explore dashboard features
+  </Card>
+</CardGroup>
+

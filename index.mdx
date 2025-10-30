@@ -1,97 +1,161 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "VulnZap Documentation"
+description: "Let agents code. We keep it safe. Real-time security scanning with merge-ready, minimal fixes."
 ---
 
-## Setting up
+## What is VulnZap?
 
-Get your documentation site up and running in minutes.
+Real-time scanning in the editor and full-repo checks with merge-ready, minimal fixes. Quiet, precise, production-grade.
+
+VulnZap is built for how you ship—agent-aware scanning that understands prompts, tool output, and generated diffs. From inline editor detection to CI integration, all with OWASP-aligned guidance and ready-to-merge patches.
 
 <Card
-  title="Start here"
+  title="Quick Start"
   icon="rocket"
   href="/quickstart"
   horizontal
 >
-  Follow our three step quickstart guide.
+  Install and run your first scan in minutes
 </Card>
 
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
+## Key Features
 
 <Columns cols={2}>
   <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
+    title="Agent-Aware Scanning"
+    icon="robot"
   >
-    Edit your docs locally and preview them in real time.
+    Understands prompts, tool outputs, and AI-generated diffs to prevent insecure code before deployment
   </Card>
   <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
+    title="Inline & Full-Repo Scans"
+    icon="magnifying-glass-chart"
   >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+    Editor extensions scan on save, while repo-level sweeps rank vulnerabilities by risk
   </Card>
   <Card
-    title="API documentation"
+    title="OWASP-Aligned Fixes"
+    icon="shield-check"
+  >
+    Automatically patches SQLi, XSS, path traversal, command injection, and more with explainable payloads
+  </Card>
+  <Card
+    title="MCP Protocol Native"
+    icon="plug"
+  >
+    Seamless guardrails in Cursor, Cline, Windsurf with real-time protection
+  </Card>
+  <Card
+    title="CI/CD Integration"
+    icon="code-branch"
+  >
+    Lightweight GitHub Actions block risky merges without slowing down pipelines
+  </Card>
+  <Card
+    title="Team Dashboard"
+    icon="users"
+  >
+    Posture overviews, shared keys, audit trails, and cross-repo management
+  </Card>
+</Columns>
+
+## How It Works
+
+Install, connect, and scan in under five minutes.
+
+<Steps>
+  <Step title="Install">
+    `npx vulnzap init` or `npm i -g vulnzap`
+  </Step>
+  <Step title="Integrate">
+    Authenticate once, pick the repo or workspace, enable inline detection
+  </Step>
+  <Step title="Scan and fix">
+    Findings stream to editor, CLI, and CI with ready-to-merge patches
+  </Step>
+  <Step title="Policies">
+    Toggle SOC 2-aligned policies, logging, and egress controls when needed
+  </Step>
+  <Step title="Deploy">
+    Merge clean diffs and keep CI fast
+  </Step>
+</Steps>
+
+## Supported Languages
+
+<Columns cols={3}>
+  <Card title="JavaScript" icon="js">
+    Production ready
+  </Card>
+  <Card title="TypeScript" icon="code">
+    Production ready
+  </Card>
+  <Card title="Python" icon="python">
+    Production ready
+  </Card>
+</Columns>
+
+<Info>
+  **Coming Soon**: Go, Rust, Java, .NET, Ruby, PHP, Docker, Terraform, Kubernetes, Swift
+</Info>
+
+## Why VulnZap?
+
+<CardGroup cols={3}>
+  <Card title="Exploitability-First" icon="crosshairs">
+    Focus on reachability and real-world impact, not theoretical issues
+  </Card>
+  <Card title="Deterministic Patches" icon="code-merge">
+    Context-aware, style-safe fixes that minimize churn
+  </Card>
+  <Card title="Low Noise, Strong Signal" icon="signal-bars">
+    Designed for developer velocity with minimal false positives
+  </Card>
+</CardGroup>
+
+## Security & Privacy
+
+<AccordionGroup>
+  <Accordion title="Zero Data Retention">
+    Source code is never persisted by default. Your code stays in your infrastructure.
+  </Accordion>
+  <Accordion title="Deployment Options">
+    Choose VulnZap cloud, your own VPC, or fully on-premises deployment.
+  </Accordion>
+  <Accordion title="SOC 2 Compliance">
+    SOC 2 controls, region-based processing, and audit packs available under NDA.
+  </Accordion>
+</AccordionGroup>
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Start Guide"
+    icon="play"
+    href="/quickstart"
+  >
+    Install and run your first scan in minutes
+  </Card>
+  <Card
+    title="Dashboard Overview"
+    icon="chart-line"
+    href="/features/dashboard"
+  >
+    Explore the VulnZap dashboard and core features
+  </Card>
+  <Card
+    title="IDE Integration"
+    icon="code"
+    href="/features/ide-integration"
+  >
+    Set up MCP protocol in Cursor, Windsurf, or Cline
+  </Card>
+  <Card
+    title="API Reference"
     icon="terminal"
     href="/api-reference/introduction"
   >
-    Auto-generate API documentation from OpenAPI specifications.
+    Integrate VulnZap programmatically
   </Card>
-</Columns>
-
-## Create beautiful pages
-
-Everything you need to create world-class documentation.
-
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+</CardGroup>

@@ -1,0 +1,768 @@
+---
+title: "CI/CD Integration"
+description: "Automate security scanning in your continuous integration and deployment pipelines"
+icon: "code-branch"
+---
+
+## Overview
+
+VulnZap integrates with popular CI/CD platforms to provide automated security scanning without slowing down your pipelines.
+
+**Key Features:**
+- Fast incremental scanning (typically <10s)
+- Automatic PR comments with findings
+- Configurable fail conditions
+- Merge blocking for high/critical issues
+- Zero configuration for most setups
+
+## GitHub Actions
+
+### Quick Setup
+
+Create `.github/workflows/vulnzap.yml`:
+
+```yaml
+name: VulnZap Security Scan
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Full history for accurate diff analysis
+      
+      - name: Run VulnZap Scan
+        uses: vulnzap/scan-action@v1
+        with:
+          api-key: ${{ secrets.VULNZAP_API_KEY }}
+          fail-on: high
+          
+      - name: Upload Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: vulnzap-report
+          path: vulnzap-report.json
+```
+
+### Adding API Key Secret
+
+1. Go to repository **Settings** → **Secrets and variables** → **Actions**
+2. Click **New repository secret**
+3. Name: `VULNZAP_API_KEY`
+4. Value: Your API key from [app.vulnzap.com/settings/api-keys](https://vulnzap.com/dashboard/settings/api-keys)
+
+### Advanced Configuration
+
+```yaml
+name: Advanced VulnZap Security
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop, staging]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly full scan
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      security-events: write
+    
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install Dependencies
+        run: npm ci
+      
+      - name: VulnZap Scan
+        uses: vulnzap/scan-action@v1
+        with:
+          api-key: ${{ secrets.VULNZAP_API_KEY }}
+          fail-on: high
+          min-severity: medium
+          incremental: true
+          format: json,sarif
+          include-packages: true
+          
+      - name: Upload SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: vulnzap-results.sarif
+      
+      - name: Comment PR
+        if: github.event_name == 'pull_request'
+        uses: vulnzap/comment-action@v1
+        with:
+          api-key: ${{ secrets.VULNZAP_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+### Action Inputs
+
+<ParamField path="api-key" type="string" required>
+  VulnZap API key
+</ParamField>
+
+<ParamField path="fail-on" type="string" default="never">
+  Fail build on severity: `critical`, `high`, `medium`, `low`, `any`, `never`
+</ParamField>
+
+<ParamField path="min-severity" type="string" default="low">
+  Minimum severity to report
+</ParamField>
+
+<ParamField path="incremental" type="boolean" default="true">
+  Only scan changed files (faster)
+</ParamField>
+
+<ParamField path="format" type="string" default="json">
+  Output format(s), comma-separated: `json`, `sarif`, `html`
+</ParamField>
+
+<ParamField path="include-packages" type="boolean" default="false">
+  Scan package dependencies for CVEs
+</ParamField>
+
+<ParamField path="exclude" type="string">
+  Additional exclude patterns (comma-separated)
+</ParamField>
+
+### PR Comments
+
+VulnZap automatically comments on PRs with findings:
+
+<img src="/images/github-pr-comment.png" alt="GitHub PR Comment" />
+
+```markdown
+## 🛡️ VulnZap Security Scan
+
+**Risk Score:** 45 (Medium)
+
+### Findings
+- 🔴 **Critical:** 0
+- 🟠 **High:** 2
+- 🟡 **Medium:** 3
+- 🟢 **Low:** 1
+
+### New Issues in This PR
+
+#### 🟠 High: SQL Injection
+**File:** `src/db/queries.ts:45`
+```typescript
+const query = `SELECT * FROM users WHERE id = ${id}`;
+```
+**Fix:** Use parameterized queries
+[View in Dashboard](https://vulnzap.com/dashboard/findings/abc123)
+
+---
+
+[View Full Report](https://vulnzap.com/dashboard/scans/scan_xyz789)
+```
+
+### Branch Protection
+
+Require VulnZap checks to pass before merging:
+
+1. Go to **Settings** → **Branches** → **Branch protection rules**
+2. Add rule for `main` branch
+3. Enable **Require status checks to pass**
+4. Select **VulnZap Security Scan**
+5. Save changes
+
+## GitLab CI
+
+### Basic Configuration
+
+Create `.gitlab-ci.yml`:
+
+```yaml
+stages:
+  - security
+
+vulnzap-scan:
+  stage: security
+  image: node:18
+  
+  before_script:
+    - npm install -g vulnzap
+    
+  script:
+    - vulnzap scan --format json --output vulnzap-report.json
+    - vulnzap ci --fail-on high
+    
+  artifacts:
+    reports:
+      vulnzap: vulnzap-report.json
+    paths:
+      - vulnzap-report.json
+    expire_in: 30 days
+    
+  only:
+    - merge_requests
+    - main
+    - develop
+```
+
+### Advanced Configuration
+
+```yaml
+include:
+  - template: Security/SAST.gitlab-ci.yml
+
+stages:
+  - test
+  - security
+  - deploy
+
+variables:
+  VULNZAP_API_KEY: $VULNZAP_API_KEY
+
+vulnzap-scan:
+  stage: security
+  image: node:18-alpine
+  
+  before_script:
+    - apk add --no-cache git
+    - npm install -g vulnzap
+    
+  script:
+    - |
+      if [ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]; then
+        vulnzap scan --incremental --fail-on high --format json,sarif
+      else
+        vulnzap scan --fail-on high --format json,sarif
+      fi
+    
+  artifacts:
+    reports:
+      vulnzap: vulnzap-report.json
+      sast: vulnzap-results.sarif
+    paths:
+      - vulnzap-report.json
+      - vulnzap-results.sarif
+    when: always
+    expire_in: 90 days
+    
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      allow_failure: false
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      allow_failure: false
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+      allow_failure: true
+
+vulnzap-scheduled:
+  extends: vulnzap-scan
+  only:
+    - schedules
+  script:
+    - vulnzap scan --format html --output full-security-report.html
+  artifacts:
+    paths:
+      - full-security-report.html
+```
+
+### GitLab Variables
+
+Add `VULNZAP_API_KEY` to CI/CD variables:
+
+1. Go to **Settings** → **CI/CD** → **Variables**
+2. Click **Add variable**
+3. Key: `VULNZAP_API_KEY`
+4. Value: Your API key
+5. ✅ **Protect variable** (recommended)
+6. ✅ **Mask variable** (recommended)
+
+### Merge Request Approvals
+
+Require security approval before merging:
+
+1. Go to **Settings** → **Merge requests** → **Approvals**
+2. Add approval rule: **Security Review**
+3. Require 1 approval from Security team
+4. Enable **Any eligible user**
+
+## CircleCI
+
+### Configuration
+
+Create `.circleci/config.yml`:
+
+```yaml
+version: 2.1
+
+orbs:
+  node: circleci/node@5.0
+
+jobs:
+  security-scan:
+    docker:
+      - image: cimg/node:18.0
+    
+    steps:
+      - checkout
+      
+      - run:
+          name: Install VulnZap
+          command: npm install -g vulnzap
+      
+      - run:
+          name: Authenticate
+          command: |
+            echo "export VULNZAP_API_KEY=$VULNZAP_API_KEY" >> $BASH_ENV
+      
+      - run:
+          name: Run Security Scan
+          command: vulnzap ci --fail-on high --format json
+      
+      - store_artifacts:
+          path: vulnzap-report.json
+          destination: security-reports
+      
+      - store_test_results:
+          path: vulnzap-report.json
+
+workflows:
+  version: 2
+  security-check:
+    jobs:
+      - security-scan:
+          filters:
+            branches:
+              only:
+                - main
+                - develop
+                - /feature\/.*/
+```
+
+## Jenkins
+
+### Pipeline Configuration
+
+Create `Jenkinsfile`:
+
+```groovy
+pipeline {
+    agent any
+    
+    environment {
+        VULNZAP_API_KEY = credentials('vulnzap-api-key')
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+        
+        stage('VulnZap Security Scan') {
+            steps {
+                sh '''
+                    npm install -g vulnzap
+                    vulnzap ci --fail-on high --format json,html
+                '''
+            }
+        }
+    }
+    
+    post {
+        always {
+            archiveArtifacts artifacts: 'vulnzap-report.*', fingerprint: true
+            
+            publishHTML([
+                reportDir: '.',
+                reportFiles: 'vulnzap-report.html',
+                reportName: 'VulnZap Security Report',
+                keepAll: true,
+                alwaysLinkToLastBuild: true
+            ])
+        }
+        
+        failure {
+            emailext(
+                subject: "Security Scan Failed: ${env.JOB_NAME}",
+                body: "VulnZap detected security vulnerabilities. View report: ${env.BUILD_URL}",
+                to: "security@example.com"
+            )
+        }
+    }
+}
+```
+
+### Jenkins Credentials
+
+1. Go to **Manage Jenkins** → **Manage Credentials**
+2. Add **Secret text** credential
+3. ID: `vulnzap-api-key`
+4. Secret: Your API key
+
+## Azure Pipelines
+
+### Configuration
+
+Create `azure-pipelines.yml`:
+
+```yaml
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+  
+pr:
+  branches:
+    include:
+      - main
+      - develop
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '18.x'
+    displayName: 'Install Node.js'
+  
+  - script: |
+      npm install -g vulnzap
+    displayName: 'Install VulnZap'
+  
+  - script: |
+      vulnzap ci --fail-on high --format json,sarif
+    env:
+      VULNZAP_API_KEY: $(VULNZAP_API_KEY)
+    displayName: 'Run VulnZap Security Scan'
+  
+  - task: PublishBuildArtifacts@1
+    condition: always()
+    inputs:
+      pathToPublish: 'vulnzap-report.json'
+      artifactName: 'VulnZap Report'
+    displayName: 'Publish Security Report'
+  
+  - task: PublishSecurityAnalysisLogs@3
+    condition: always()
+    inputs:
+      artifactName: 'CodeAnalysisLogs'
+      allTools: false
+      sarif: 'vulnzap-results.sarif'
+    displayName: 'Publish SARIF Results'
+```
+
+## Bitbucket Pipelines
+
+### Configuration
+
+Create `bitbucket-pipelines.yml`:
+
+```yaml
+image: node:18
+
+definitions:
+  steps:
+    - step: &security-scan
+        name: VulnZap Security Scan
+        caches:
+          - node
+        script:
+          - npm install -g vulnzap
+          - vulnzap ci --fail-on high --format json
+        artifacts:
+          - vulnzap-report.json
+
+pipelines:
+  default:
+    - step: *security-scan
+  
+  pull-requests:
+    '**':
+      - step: *security-scan
+  
+  branches:
+    main:
+      - step: *security-scan
+    develop:
+      - step: *security-scan
+```
+
+### Repository Variables
+
+1. Go to **Repository settings** → **Pipelines** → **Repository variables**
+2. Add variable `VULNZAP_API_KEY`
+3. ✅ **Secured** (recommended)
+
+## Docker
+
+### Dockerfile Integration
+
+```dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install VulnZap
+RUN npm install -g vulnzap
+
+# Copy application
+COPY . .
+
+# Run security scan before build
+RUN vulnzap scan --fail-on high
+
+# Build application
+RUN npm install && npm run build
+
+CMD ["npm", "start"]
+```
+
+### Multi-Stage Build
+
+```dockerfile
+# Stage 1: Security Scan
+FROM node:18-alpine AS security
+WORKDIR /app
+COPY . .
+RUN npm install -g vulnzap
+RUN vulnzap scan --fail-on high --format json --output /tmp/vulnzap-report.json
+
+# Stage 2: Build
+FROM node:18-alpine AS build
+WORKDIR /app
+COPY --from=security /app .
+RUN npm install && npm run build
+
+# Stage 3: Production
+FROM node:18-alpine
+WORKDIR /app
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/package*.json ./
+RUN npm ci --only=production
+CMD ["node", "dist/index.js"]
+```
+
+## Performance Optimization
+
+### Incremental Scanning
+
+Only scan changed files in CI/CD:
+
+```yaml
+- name: Incremental Scan
+  run: vulnzap scan --incremental
+```
+
+**Speedup:** Typically 5-10x faster than full scans.
+
+### Caching
+
+Cache VulnZap data between runs:
+
+**GitHub Actions:**
+
+```yaml
+- name: Cache VulnZap
+  uses: actions/cache@v3
+  with:
+    path: ~/.vulnzap/cache
+    key: vulnzap-${{ runner.os }}-${{ hashFiles('**/*.js', '**/*.ts', '**/*.py') }}
+    restore-keys: vulnzap-${{ runner.os }}-
+```
+
+**GitLab CI:**
+
+```yaml
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .vulnzap-cache/
+```
+
+### Parallel Scanning
+
+Utilize multiple CPU cores:
+
+```yaml
+- run: vulnzap scan --threads 4
+```
+
+## Exit Codes
+
+VulnZap CI mode uses standard exit codes:
+
+| Exit Code | Meaning | Action |
+|-----------|---------|--------|
+| 0 | Success, no issues | ✅ Continue pipeline |
+| 1 | Critical findings | ❌ Fail build |
+| 2 | High findings | ❌ Fail build (if `--fail-on high`) |
+| 3 | Medium findings | ⚠️ Warning |
+| 4 | Low findings | ℹ️ Info |
+| 10 | Scan error | ❌ Fail build |
+| 11 | Auth error | ❌ Fail build |
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Fail-Fast on Critical Issues">
+    ```yaml
+    - run: vulnzap ci --fail-on critical
+    ```
+    
+    Block deployments if critical vulnerabilities are found.
+  </Accordion>
+  
+  <Accordion title="Incremental PR Scans">
+    ```yaml
+    if: github.event_name == 'pull_request'
+    run: vulnzap scan --incremental --fail-on high
+    ```
+    
+    Fast scans on PRs, full scans on main branch.
+  </Accordion>
+  
+  <Accordion title="Scheduled Deep Scans">
+    ```yaml
+    on:
+      schedule:
+        - cron: '0 0 * * 0'  # Every Sunday
+    
+    jobs:
+      deep-scan:
+        steps:
+          - run: vulnzap scan --no-cache --fail-on medium
+    ```
+    
+    Weekly full scans to catch everything.
+  </Accordion>
+  
+  <Accordion title="Separate Security Stage">
+    ```yaml
+    stages:
+      - build
+      - test
+      - security  # Dedicated security stage
+      - deploy
+    ```
+    
+    Run security checks before deployment.
+  </Accordion>
+  
+  <Accordion title="Store Scan History">
+    ```yaml
+    - uses: actions/upload-artifact@v3
+      with:
+        name: vulnzap-report-${{ github.sha }}
+        path: vulnzap-report.json
+        retention-days: 90
+    ```
+    
+    Keep reports for compliance and trend analysis.
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Authentication Errors">
+    **Error:** `Authentication failed: Invalid API key`
+    
+    **Solutions:**
+    - Verify API key is correct
+    - Check environment variable is set: `echo $VULNZAP_API_KEY`
+    - Ensure secret is not masked incorrectly
+    - Regenerate API key in dashboard
+  </Accordion>
+  
+  <Accordion title="Slow Scans">
+    **Problem:** Scans taking too long
+    
+    **Solutions:**
+    - Enable incremental scanning: `--incremental`
+    - Use caching between runs
+    - Increase threads: `--threads 4`
+    - Exclude unnecessary files in `.vulnzapignore`
+  </Accordion>
+  
+  <Accordion title="False Build Failures">
+    **Problem:** Builds failing on low-severity issues
+    
+    **Solutions:**
+    - Adjust fail threshold: `--fail-on high`
+    - Ignore specific findings in `.vulnzap.yml`
+    - Use `allow_failure: true` for warning-only mode
+  </Accordion>
+  
+  <Accordion title="Network Errors">
+    **Error:** `Failed to connect to VulnZap API`
+    
+    **Solutions:**
+    - Check firewall/proxy settings
+    - Verify `api.vulnzap.com` is reachable
+    - Use self-hosted VulnZap for air-gapped environments
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="CLI Reference"
+    icon="terminal"
+    href="/integration/cli"
+  >
+    Complete command-line documentation
+  </Card>
+  
+  <Card
+    title="Dashboard Guide"
+    icon="chart-line"
+    href="/features/dashboard"
+  >
+    View findings in the web dashboard
+  </Card>
+  
+  <Card
+    title="IDE Integration"
+    icon="code"
+    href="/features/ide-integration"
+  >
+    Real-time scanning while coding
+  </Card>
+  
+  <Card
+    title="Deployment Options"
+    icon="server"
+    href="/team/deployment-options"
+  >
+    Self-hosted and on-premises options
+  </Card>
+</CardGroup>
+

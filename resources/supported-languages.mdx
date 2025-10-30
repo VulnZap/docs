@@ -1,0 +1,358 @@
+---
+title: "Supported Languages"
+description: "Language and framework support for VulnZap security scanning"
+icon: "code"
+---
+
+## Production Ready
+
+These languages are fully supported with comprehensive vulnerability detection:
+
+<CardGroup cols={3}>
+  <Card title="JavaScript" icon="js">
+    Full support
+  </Card>
+  <Card title="TypeScript" icon="code">
+    Full support
+  </Card>
+  <Card title="Python" icon="python">
+    Full support
+  </Card>
+</CardGroup>
+
+## Detailed Language Support
+
+### JavaScript
+
+**Status:** ✅ Production Ready
+
+**Versions:**
+- ES5, ES6/ES2015 through ES2024
+- Node.js 14+
+- Browser JavaScript
+
+**Frameworks Detected:**
+- Express.js
+- Fastify
+- Koa
+- Nest.js
+- Next.js
+- React
+- Vue.js
+- Angular
+
+**Vulnerabilities Detected:**
+- SQL Injection
+- NoSQL Injection
+- Cross-Site Scripting (XSS)
+- Command Injection
+- Path Traversal
+- Insecure Deserialization
+- SSRF
+- Open Redirect
+- Prototype Pollution
+- Regular Expression DoS (ReDoS)
+- And 40+ more...
+
+**Package Manager Support:**
+- npm
+- yarn
+- pnpm
+
+### TypeScript
+
+**Status:** ✅ Production Ready
+
+**Versions:**
+- TypeScript 3.x through 5.x
+- All JavaScript versions
+
+**Features:**
+- Type-aware analysis
+- Generic type tracking
+- Interface validation
+- Enum safety checks
+
+**Frameworks:** Same as JavaScript + TypeScript-specific patterns
+
+### Python
+
+**Status:** ✅ Production Ready
+
+**Versions:**
+- Python 3.7+
+- Python 2.7 (limited support)
+
+**Frameworks Detected:**
+- Django
+- Flask
+- FastAPI
+- Pyramid
+- Tornado
+- aiohttp
+
+**Vulnerabilities Detected:**
+- SQL Injection
+- Command Injection
+- Path Traversal
+- XML External Entity (XXE)
+- Insecure Deserialization (pickle)
+- LDAP Injection
+- Template Injection
+- And 35+ more...
+
+**Package Manager Support:**
+- pip
+- poetry
+- pipenv
+- conda
+
+## In Active Development
+
+These languages are under active development with Beta support:
+
+<CardGroup cols={3}>
+  <Card title="Go" icon="golang">
+    Beta (Q1 2025)
+  </Card>
+  <Card title="Rust" icon="rust">
+    Beta (Q1 2025)
+  </Card>
+  <Card title="Java" icon="java">
+    Beta (Q2 2025)
+  </Card>
+</CardGroup>
+
+### Go (Beta)
+
+**Expected:** Q1 2025
+
+**Planned Support:**
+- Go 1.18+ (with generics)
+- Standard library security patterns
+- Popular frameworks (Gin, Echo, Fiber)
+- Goroutine safety analysis
+- SQL injection, command injection, path traversal
+
+**Sign up for Beta:** golang-beta@vulnzap.com
+
+### Rust (Beta)
+
+**Expected:** Q1 2025
+
+**Planned Support:**
+- Rust 1.70+
+- Memory safety patterns
+- Unsafe code analysis
+- Popular frameworks (Actix, Rocket, Axum)
+- SQL injection, command injection
+
+**Sign up for Beta:** rust-beta@vulnzap.com
+
+### Java (Beta)
+
+**Expected:** Q2 2025
+
+**Planned Support:**
+- Java 11, 17, 21
+- Spring Boot, Jakarta EE
+- Maven, Gradle
+- Comprehensive OWASP Top 10 coverage
+
+**Sign up for Beta:** java-beta@vulnzap.com
+
+## Roadmap
+
+Planned language support:
+
+| Language | Status | Expected Release |
+|----------|--------|------------------|
+| **.NET/C#** | Planning | Q2 2025 |
+| **Ruby** | Planning | Q3 2025 |
+| **PHP** | Planning | Q3 2025 |
+| **Swift** | Planning | Q4 2025 |
+| **Kotlin** | Planning | Q4 2025 |
+| **Scala** | Under Consideration | TBD |
+
+## Infrastructure as Code
+
+Security scanning for IaC:
+
+### Docker (Planned: Q2 2025)
+
+- Dockerfile security best practices
+- Base image vulnerability scanning
+- Secrets detection in images
+- Privilege escalation risks
+
+### Terraform (Planned: Q2 2025)
+
+- AWS security group misconfigurations
+- Public S3 buckets
+- IAM overpermissioning
+- Encryption settings
+
+### Kubernetes (Planned: Q3 2025)
+
+- YAML manifest security
+- RBAC misconfigurations
+- Pod security policies
+- Network policies
+
+## Framework-Specific Detection
+
+VulnZap provides specialized detection for popular frameworks:
+
+<Tabs>
+  <Tab title="JavaScript/TypeScript">
+    **Express.js:**
+    - Route-specific vulnerabilities
+    - Middleware security
+    - Session management
+    - CORS configuration
+    
+    **Next.js:**
+    - Server-side rendering security
+    - API route protection
+    - Environment variable exposure
+    - Static asset security
+    
+    **React:**
+    - DOM-based XSS
+    - dangerouslySetInnerHTML usage
+    - Component prop validation
+    - State management security
+  </Tab>
+  
+  <Tab title="Python">
+    **Django:**
+    - ORM query safety
+    - Template auto-escaping
+    - CSRF protection
+    - Authentication flows
+    - Admin panel security
+    
+    **Flask:**
+    - Route parameter validation
+    - Template rendering security
+    - Session management
+    - Blueprint security
+    
+    **FastAPI:**
+    - Pydantic validation
+    - OAuth2 flows
+    - CORS configuration
+    - API documentation exposure
+  </Tab>
+</Tabs>
+
+## Detection Coverage
+
+### OWASP Top 10 2021 Coverage
+
+| Vulnerability | JavaScript | TypeScript | Python | Go (Beta) | Rust (Beta) | Java (Beta) |
+|---------------|------------|------------|--------|-----------|-------------|-------------|
+| A01: Broken Access Control | ✅ | ✅ | ✅ | 🔄 | 🔄 | 🔄 |
+| A02: Cryptographic Failures | ✅ | ✅ | ✅ | 🔄 | 🔄 | 🔄 |
+| A03: Injection | ✅ | ✅ | ✅ | 🔄 | 🔄 | 🔄 |
+| A04: Insecure Design | ✅ | ✅ | ✅ | 🔄 | 🔄 | 🔄 |
+| A05: Security Misconfiguration | ✅ | ✅ | ✅ | 🔄 | 🔄 | 🔄 |
+| A06: Vulnerable Components | ✅ | ✅ | ✅ | 🔄 | 🔄 | 🔄 |
+| A07: Auth Failures | ✅ | ✅ | ✅ | 🔄 | 🔄 | 🔄 |
+| A08: Data Integrity Failures | ✅ | ✅ | ✅ | 🔄 | 🔄 | 🔄 |
+| A09: Logging Failures | ✅ | ✅ | ✅ | 🔄 | 🔄 | 🔄 |
+| A10: SSRF | ✅ | ✅ | ✅ | 🔄 | 🔄 | 🔄 |
+
+**Legend:** ✅ Full Support | 🔄 In Development | ⬜ Planned
+
+## Package Vulnerability Scanning
+
+VulnZap scans dependencies for known CVEs:
+
+**Supported Package Managers:**
+- **npm** (JavaScript/TypeScript)
+- **yarn** (JavaScript/TypeScript)
+- **pnpm** (JavaScript/TypeScript)
+- **pip** (Python)
+- **poetry** (Python)
+- **pipenv** (Python)
+- **Go modules** (Coming Q1 2025)
+- **Cargo** (Rust, Coming Q1 2025)
+- **Maven** (Java, Coming Q2 2025)
+- **Gradle** (Java, Coming Q2 2025)
+
+**CVE Database:**
+- Updated daily
+- 500,000+ known vulnerabilities
+- GitHub Security Advisories integration
+- npm Advisory Database
+- PyPI Safety DB
+
+## Request Language Support
+
+Don't see your language?
+
+<Steps>
+  <Step title="Submit Request">
+    Email: languages@vulnzap.com
+  </Step>
+  
+  <Step title="Provide Context">
+    - Language/framework
+    - Use case
+    - Team size
+    - Timeline
+  </Step>
+  
+  <Step title="Join Beta Program">
+    Get early access when support launches
+  </Step>
+</Steps>
+
+## Testing New Language Support
+
+When new languages enter Beta:
+
+1. **Sign up for Beta access**
+2. **Receive private Docker image** or CLI update
+3. **Test on your codebase**
+4. **Provide feedback** on accuracy
+5. **Report false positives/negatives**
+6. **Shape detection rules** before GA release
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Start scanning your code
+  </Card>
+  
+  <Card
+    title="Security Coverage"
+    icon="shield"
+    href="/features/security-coverage"
+  >
+    See all detected vulnerabilities
+  </Card>
+  
+  <Card
+    title="Request Language"
+    icon="envelope"
+    href="mailto:languages@vulnzap.com"
+  >
+    Request support for your language
+  </Card>
+  
+  <Card
+    title="Join Beta Program"
+    icon="flask"
+    href="mailto:beta@vulnzap.com"
+  >
+    Test upcoming language support
+  </Card>
+</CardGroup>
+

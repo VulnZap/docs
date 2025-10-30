@@ -1,0 +1,648 @@
+---
+title: "Compliance & Security"
+description: "SOC 2, GDPR, HIPAA, data residency, and security certifications"
+icon: "shield-halved"
+---
+
+## Overview
+
+VulnZap maintains rigorous security and compliance standards to protect your data and meet regulatory requirements.
+
+## Security Certifications
+
+<CardGroup cols={2}>
+  <Card title="SOC 2 Type II" icon="certificate">
+    Annual third-party audit of security controls
+  </Card>
+  <Card title="GDPR Compliant" icon="scale-balanced">
+    Full compliance with EU data protection regulations
+  </Card>
+  <Card title="ISO 27001" icon="shield-check">
+    Information security management system (In Progress)
+  </Card>
+  <Card title="HIPAA Eligible" icon="hospital">
+    Available for Enterprise on-premises deployments
+  </Card>
+</CardGroup>
+
+## SOC 2 Type II Compliance
+
+### Trust Service Principles
+
+VulnZap's SOC 2 report covers all five Trust Service Criteria:
+
+<AccordionGroup>
+  <Accordion title="Security">
+    **Controls Implemented:**
+    - Multi-factor authentication required
+    - Role-based access control (RBAC)
+    - Encryption in transit (TLS 1.3) and at rest (AES-256)
+    - Regular penetration testing
+    - Vulnerability management program
+    - Security incident response plan
+    
+    **Monitoring:**
+    - 24/7 security monitoring
+    - Automated threat detection
+    - Annual third-party security audit
+  </Accordion>
+  
+  <Accordion title="Availability">
+    **Uptime Guarantee:** 99.9% (Enterprise SLA)
+    
+    **Infrastructure:**
+    - Multi-region deployment
+    - Auto-scaling and load balancing
+    - Automated failover
+    - Database replication
+    - Regular backup and restore testing
+    
+    **Monitoring:**
+    - Real-time health checks
+    - Automated alerting
+    - Incident management system
+  </Accordion>
+  
+  <Accordion title="Processing Integrity">
+    **Quality Controls:**
+    - Automated testing (95% code coverage)
+    - Continuous integration/deployment
+    - Change management process
+    - Error logging and monitoring
+    
+    **Accuracy:**
+    - Low false positive rate (<5%)
+    - Regular accuracy benchmarking
+    - Customer feedback integration
+  </Accordion>
+  
+  <Accordion title="Confidentiality">
+    **Data Protection:**
+    - Zero code storage by default
+    - Encryption at rest and in transit
+    - Secure data deletion
+    - Access logging and monitoring
+    
+    **Access Controls:**
+    - Need-to-know basis
+    - Regular access reviews
+    - Automated deprovisioning
+  </Accordion>
+  
+  <Accordion title="Privacy">
+    **Privacy Program:**
+    - GDPR compliant
+    - Privacy by design
+    - Data minimization
+    - User rights management (access, deletion, portability)
+    
+    **Compliance:**
+    - Privacy policy
+    - Cookie policy
+    - Terms of service
+    - Data processing agreements
+  </Accordion>
+</AccordionGroup>
+
+### SOC 2 Report Access
+
+Request SOC 2 report under NDA:
+
+<Steps>
+  <Step title="Contact Compliance Team">
+    Email compliance@vulnzap.com
+  </Step>
+  
+  <Step title="Sign NDA">
+    Execute mutual non-disclosure agreement
+  </Step>
+  
+  <Step title="Receive Report">
+    SOC 2 Type II report delivered securely
+  </Step>
+</Steps>
+
+<Info>
+  SOC 2 reports updated annually. Current report covers period: January 1, 2024 - December 31, 2024
+</Info>
+
+## GDPR Compliance
+
+### Data Protection Principles
+
+VulnZap adheres to all GDPR principles:
+
+| Principle | Implementation |
+|-----------|----------------|
+| **Lawfulness, Fairness, Transparency** | Clear privacy policy, legitimate interest basis, transparent processing |
+| **Purpose Limitation** | Data used only for security scanning, no secondary uses |
+| **Data Minimization** | Collect only metadata, source code not stored by default |
+| **Accuracy** | User-controlled data, update/correction mechanisms |
+| **Storage Limitation** | Retention periods based on plan, automated deletion |
+| **Integrity and Confidentiality** | Encryption, access controls, security monitoring |
+| **Accountability** | DPO appointed, audit trails, compliance documentation |
+
+### Data Subject Rights
+
+VulnZap supports all GDPR data subject rights:
+
+<AccordionGroup>
+  <Accordion title="Right to Access">
+    Request copy of your data:
+    
+    ```
+    Dashboard → Settings → Privacy → Export My Data
+    ```
+    
+    Delivered within 30 days in machine-readable format (JSON).
+  </Accordion>
+  
+  <Accordion title="Right to Rectification">
+    Correct inaccurate data:
+    
+    ```
+    Dashboard → Settings → Account → Update Information
+    ```
+    
+    Changes applied immediately.
+  </Accordion>
+  
+  <Accordion title="Right to Erasure ('Right to be Forgotten')">
+    Delete all personal data:
+    
+    ```
+    Dashboard → Settings → Privacy → Delete My Account
+    ```
+    
+    **Consequences:**
+    - Account and all data deleted within 30 days
+    - Some data retained for legal compliance (billing records: 7 years)
+    - Irreversible action
+  </Accordion>
+  
+  <Accordion title="Right to Data Portability">
+    Export data in structured format:
+    
+    ```bash
+    vulnzap export --all --format json
+    ```
+    
+    Includes: projects, scans, findings, settings.
+  </Accordion>
+  
+  <Accordion title="Right to Object">
+    Object to processing:
+    
+    Email: privacy@vulnzap.com
+    
+    Processing will cease within 30 days (except legal obligations).
+  </Accordion>
+  
+  <Accordion title="Right to Restriction">
+    Temporarily restrict processing:
+    
+    ```
+    Dashboard → Settings → Privacy → Restrict Processing
+    ```
+    
+    Account frozen, no new scans, data preserved.
+  </Accordion>
+</AccordionGroup>
+
+### Data Processing Agreement (DPA)
+
+For Enterprise customers, VulnZap provides GDPR-compliant DPA:
+
+- Standard Contractual Clauses (SCCs)
+- Processor obligations
+- Sub-processor list
+- Data transfer mechanisms
+- Security measures
+- Audit rights
+
+Request DPA: legal@vulnzap.com
+
+### Data Protection Officer
+
+**Contact DPO:**
+- Email: dpo@vulnzap.com
+- Mail: VulnZap Data Protection Officer, [Address]
+
+## HIPAA Compliance
+
+<Warning>
+  HIPAA compliance available only for **Enterprise on-premises** deployments.
+</Warning>
+
+### Business Associate Agreement (BAA)
+
+For healthcare organizations processing PHI:
+
+**Requirements:**
+- On-premises deployment (air-gapped)
+- Signed BAA with VulnZap
+- Additional security controls
+- Enhanced audit logging
+- Regular compliance audits
+
+**Contact:** hipaa@vulnzap.com
+
+### HIPAA Controls
+
+VulnZap implements required HIPAA safeguards:
+
+**Administrative Safeguards:**
+- Security management process
+- Workforce security training
+- Access authorization and management
+- Incident response procedures
+
+**Physical Safeguards:**
+- Facility access controls (customer-managed in on-premises)
+- Workstation security
+- Device and media controls
+
+**Technical Safeguards:**
+- Access controls (unique user IDs, automatic logoff)
+- Audit controls (comprehensive logging)
+- Integrity controls (encryption, checksums)
+- Transmission security (TLS 1.3)
+
+## Data Residency
+
+### Available Regions
+
+Choose where your data is stored and processed:
+
+<Tabs>
+  <Tab title="United States">
+    **Regions:**
+    - us-east-1 (N. Virginia)
+    - us-west-2 (Oregon)
+    
+    **Compliance:**
+    - SOC 2 Type II
+    - FedRAMP Moderate (in progress)
+    
+    **Data Transfer:** Within US only
+  </Tab>
+  
+  <Tab title="European Union">
+    **Regions:**
+    - eu-west-1 (Ireland)
+    - eu-central-1 (Frankfurt)
+    
+    **Compliance:**
+    - GDPR
+    - Standard Contractual Clauses
+    
+    **Data Transfer:** Within EU only
+  </Tab>
+  
+  <Tab title="Asia Pacific">
+    **Regions:**
+    - ap-southeast-1 (Singapore)
+    - ap-northeast-1 (Tokyo)
+    
+    **Compliance:**
+    - PDPA (Singapore)
+    - APPI (Japan)
+    
+    **Data Transfer:** Within APAC only
+  </Tab>
+  
+  <Tab title="On-Premises">
+    **Complete Control:**
+    - Data never leaves your infrastructure
+    - Custom compliance requirements
+    - Air-gapped deployment
+    
+    **Compliance:**
+    - Any jurisdiction
+    - Custom certifications
+  </Tab>
+</Tabs>
+
+### Configuring Data Residency
+
+```
+Dashboard → Settings → Data Residency → Select Region
+```
+
+<Warning>
+  Changing regions requires data migration. Expect 1-2 hours downtime.
+</Warning>
+
+## Data Retention
+
+### Retention Periods by Plan
+
+| Data Type | Free | Standard | Scale | Enterprise |
+|-----------|------|----------|-------|------------|
+| **Scan Results** | 7 days | 30 days | 90 days | 365 days |
+| **Findings Metadata** | 7 days | 30 days | 90 days | Custom |
+| **Audit Logs** | N/A | 30 days | 90 days | 365 days |
+| **API Request Logs** | N/A | 7 days | 30 days | 90 days |
+| **Source Code** | Never* | Never* | Never* | Optional† |
+
+**Notes:**
+- *Source code never stored by default
+- †Enterprise can opt-in for code snippets in findings (encrypted)
+
+### Custom Retention
+
+Enterprise customers can configure custom retention:
+
+```yaml
+retention_policy:
+  findings: 730d  # 2 years
+  audit_logs: 2555d  # 7 years (regulatory requirement)
+  scan_results: 365d
+  api_logs: 90d
+```
+
+Contact: enterprise@vulnzap.com
+
+## Security Measures
+
+### Encryption
+
+**In Transit:**
+- TLS 1.3 for all connections
+- Perfect Forward Secrecy (PFS)
+- Certificate pinning in CLI/IDE
+
+**At Rest:**
+- AES-256 encryption
+- Encrypted database storage
+- Encrypted backups
+- Key rotation every 90 days
+
+**Key Management:**
+- AWS KMS / GCP KMS / Azure Key Vault
+- Hardware Security Modules (HSM) for Enterprise
+- Separate keys per customer (Enterprise)
+
+### Authentication & Authorization
+
+**Authentication Methods:**
+- Email + Password (with 2FA required)
+- SSO (SAML 2.0, OAuth 2.0) - Enterprise
+- API Keys (with rotation policy)
+
+**Authorization:**
+- Role-Based Access Control (RBAC)
+- Project-level permissions
+- Audit trail for all access
+
+### Network Security
+
+**Protection Layers:**
+- Web Application Firewall (WAF)
+- DDoS protection
+- Rate limiting
+- IP whitelisting (Enterprise)
+
+**Monitoring:**
+- 24/7 security monitoring
+- Automated threat detection
+- Security Information and Event Management (SIEM)
+
+### Vulnerability Management
+
+**Internal Security:**
+- Quarterly penetration testing
+- Annual security audit
+- Bug bounty program
+- Dependency scanning (daily)
+
+**Disclosure:**
+- Responsible disclosure policy
+- security@vulnzap.com
+- 90-day disclosure timeline
+
+## Incident Response
+
+### Incident Response Plan
+
+<Steps>
+  <Step title="Detection">
+    Automated monitoring detects anomaly
+  </Step>
+  
+  <Step title="Triage">
+    Security team assesses severity (15 min SLA)
+  </Step>
+  
+  <Step title="Containment">
+    Isolate affected systems
+  </Step>
+  
+  <Step title="Investigation">
+    Determine root cause and impact
+  </Step>
+  
+  <Step title="Remediation">
+    Apply fixes and security patches
+  </Step>
+  
+  <Step title="Notification">
+    Notify affected customers (within 72 hours if data breach)
+  </Step>
+  
+  <Step title="Post-Mortem">
+    Document incident and improve controls
+  </Step>
+</Steps>
+
+### Customer Notification
+
+In case of security incident:
+
+**Notification Channels:**
+- Email to account owner
+- Dashboard banner
+- Status page update
+- Public disclosure (if warranted)
+
+**Timeline:**
+- Initial notification: Within 24 hours of discovery
+- Detailed report: Within 72 hours
+- Post-mortem: Within 14 days
+
+### Data Breach Response
+
+Per GDPR Article 33:
+
+1. **Internal Notification:** DPO notified within 24 hours
+2. **Supervisory Authority:** Notified within 72 hours
+3. **Data Subjects:** Notified without undue delay if high risk
+4. **Documentation:** Breach logged in incident register
+5. **Remediation:** Measures taken to prevent recurrence
+
+## Audit and Compliance
+
+### Internal Audits
+
+- **Quarterly:** Security control review
+- **Annually:** SOC 2 Type II audit
+- **Continuously:** Automated compliance monitoring
+
+### External Audits
+
+**Available for Enterprise:**
+- Right to audit (with reasonable notice)
+- Third-party security assessment
+- Penetration testing results sharing
+
+**Request Audit:** compliance@vulnzap.com
+
+### Compliance Documentation
+
+Available to customers:
+
+<AccordionGroup>
+  <Accordion title="Security Whitepaper">
+    Comprehensive security architecture and controls documentation.
+    
+    **Topics:**
+    - Architecture diagrams
+    - Data flow
+    - Encryption implementation
+    - Access controls
+    - Monitoring and logging
+    
+    Download: [app.vulnzap.com/security-whitepaper.pdf](https://vulnzap.com/dashboard/security-whitepaper.pdf)
+  </Accordion>
+  
+  <Accordion title="Compliance Matrix">
+    Mapping of VulnZap controls to various frameworks:
+    - SOC 2 TSC
+    - GDPR Articles
+    - HIPAA Safeguards
+    - ISO 27001 Controls
+    - NIST Cybersecurity Framework
+    
+    Request: compliance@vulnzap.com
+  </Accordion>
+  
+  <Accordion title="Penetration Test Results">
+    Summary of latest penetration test findings (Enterprise only).
+    
+    Request: security@vulnzap.com (under NDA)
+  </Accordion>
+  
+  <Accordion title="Sub-Processor List">
+    List of all third-party service providers with access to customer data.
+    
+    Download: [app.vulnzap.com/sub-processors](https://vulnzap.com/dashboard/sub-processors)
+  </Accordion>
+</AccordionGroup>
+
+## Industry-Specific Compliance
+
+### Financial Services (PCI-DSS)
+
+For payment processing environments:
+
+**Requirements:**
+- On-premises deployment
+- Network segmentation
+- Enhanced logging
+- Quarterly scans
+- Annual audit
+
+Contact: enterprise@vulnzap.com
+
+### Government (FedRAMP)
+
+**Status:** FedRAMP Moderate authorization in progress (expected Q2 2025)
+
+**Current Options:**
+- GovCloud deployment (AWS GovCloud)
+- On-premises deployment
+
+Contact: government@vulnzap.com
+
+### Healthcare (HITRUST)
+
+**Status:** HITRUST CSF certification in progress
+
+**Current Compliance:**
+- HIPAA-eligible (on-premises)
+- Enhanced security controls
+- Risk assessment framework
+
+Contact: hipaa@vulnzap.com
+
+## Privacy Shield & Data Transfers
+
+### International Data Transfers
+
+**Mechanisms:**
+- Standard Contractual Clauses (EU-US)
+- Adequacy decisions
+- Binding Corporate Rules (in development)
+
+### Data Transfer Impact Assessment
+
+Enterprise customers receive Data Transfer Impact Assessment (DTIA) documenting:
+- Legal basis for transfer
+- Safeguards in place
+- Risk mitigation measures
+
+Request: privacy@vulnzap.com
+
+## Contact Compliance Team
+
+<CardGroup cols={2}>
+  <Card title="General Compliance" icon="envelope">
+    compliance@vulnzap.com
+  </Card>
+  <Card title="Data Protection Officer" icon="shield">
+    dpo@vulnzap.com
+  </Card>
+  <Card title="Security Concerns" icon="lock">
+    security@vulnzap.com
+  </Card>
+  <Card title="Legal Inquiries" icon="gavel">
+    legal@vulnzap.com
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Deployment Options"
+    icon="server"
+    href="/team/deployment-options"
+  >
+    VPC and on-premises deployment
+  </Card>
+  
+  <Card
+    title="Team Management"
+    icon="users"
+    href="/team/management"
+  >
+    User access and permissions
+  </Card>
+  
+  <Card
+    title="Pricing"
+    icon="dollar-sign"
+    href="/resources/pricing"
+  >
+    Plan comparison and costs
+  </Card>
+  
+  <Card
+    title="Security Whitepaper"
+    icon="file-pdf"
+    href="https://vulnzap.com/dashboard/security-whitepaper.pdf"
+  >
+    Download detailed security documentation
+  </Card>
+</CardGroup>
+

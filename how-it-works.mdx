@@ -1,0 +1,406 @@
+---
+title: "How It Works"
+description: "Understanding VulnZap's architecture and scanning methodology"
+icon: "gear"
+---
+
+## Overview
+
+VulnZap combines static analysis, agent-aware context understanding, and exploitability-first ranking to deliver actionable security insights with minimal false positives.
+
+## Architecture
+
+<Steps>
+  <Step title="Code Collection">
+    VulnZap integrates at multiple touchpoints:
+    - **IDE Integration**: Real-time scanning via MCP protocol
+    - **CLI Integration**: On-demand and watch mode scanning
+    - **CI/CD Integration**: Automated scanning in pipelines
+    - **API Integration**: Programmatic scanning workflows
+  </Step>
+  
+  <Step title="Analysis Engine">
+    Multi-layered analysis identifies vulnerabilities:
+    - **Abstract Syntax Tree (AST) Analysis**: Parse code structure
+    - **Data Flow Analysis**: Track tainted data propagation
+    - **Control Flow Analysis**: Understand execution paths
+    - **Agent Context Analysis**: Parse AI prompts and tool outputs
+  </Step>
+  
+  <Step title="Vulnerability Detection">
+    OWASP-aligned detection patterns identify issues:
+    - SQL Injection (A03:2021)
+    - Cross-Site Scripting (A03:2021)
+    - Path Traversal (A01:2021)
+    - Command Injection (A03:2021)
+    - Insecure Deserialization (A08:2021)
+    - And more...
+  </Step>
+  
+  <Step title="Exploitability Ranking">
+    Risk scoring based on real-world impact:
+    - **Reachability**: Is the code path actually executable?
+    - **User Input**: Is user-controlled data involved?
+    - **Security Controls**: Are there existing mitigations?
+    - **Impact**: What's the potential damage?
+  </Step>
+  
+  <Step title="Patch Generation">
+    Context-aware fixes minimize code churn:
+    - Preserve code style and formatting
+    - Maintain existing test compatibility
+    - Generate idiomatic language patterns
+    - Include explanatory comments
+  </Step>
+  
+  <Step title="Delivery & Integration">
+    Results delivered where you work:
+    - Inline annotations in IDE
+    - Terminal output with color-coded severity
+    - Dashboard visualizations and trends
+    - CI/CD status checks and PR comments
+  </Step>
+</Steps>
+
+## Scanning Modes
+
+### Inline Scanning
+
+Real-time vulnerability detection as you code:
+
+```bash
+vulnzap watch
+```
+
+**How it works:**
+1. VulnZap monitors file system changes
+2. On save, analyzes the diff (not full file)
+3. Highlights issues inline in your editor
+4. Suggests fixes in real-time
+
+**Best for:**
+- Active development
+- Immediate feedback loops
+- Catching issues before commit
+
+<Info>
+  Inline scanning only analyzes changed lines, making it extremely fast (typically <100ms).
+</Info>
+
+### Repository Scanning
+
+Deep analysis of your entire codebase:
+
+```bash
+vulnzap scan
+```
+
+**How it works:**
+1. Recursively analyzes all supported files
+2. Builds complete call graphs
+3. Ranks findings by exploitability
+4. Generates comprehensive report
+
+**Best for:**
+- Security audits
+- Pre-deployment checks
+- Baseline security posture
+
+### CI/CD Scanning
+
+Automated security gates in your pipeline:
+
+```yaml
+- run: vulnzap scan --fail-on high
+```
+
+**How it works:**
+1. Scans code on every PR or commit
+2. Compares against baseline
+3. Blocks merge if new high/critical issues found
+4. Posts results as PR comments
+
+**Best for:**
+- Preventing regression
+- Enforcing security standards
+- Team-wide protection
+
+### Agent-Aware Scanning
+
+Specialized scanning for AI-generated code:
+
+**How it works:**
+1. VulnZap receives agent prompts via MCP
+2. Analyzes generated diffs before application
+3. Blocks insecure changes in real-time
+4. Suggests secure alternatives to the agent
+
+**Best for:**
+- AI coding assistants (Cursor, Windsurf, Cline)
+- Autonomous code generation
+- Agentic workflows
+
+<Warning>
+  Agent-aware scanning requires MCP protocol integration. See [IDE Integration](/features/ide-integration) for setup.
+</Warning>
+
+## Detection Methodology
+
+### Data Flow Analysis
+
+VulnZap tracks data from sources to sinks:
+
+```javascript
+// Source: User input
+const userId = req.params.id;
+
+// Flow: No sanitization
+const query = `SELECT * FROM users WHERE id = ${userId}`;
+
+// Sink: Database execution
+db.execute(query); // ❌ VulnZap flags SQL injection
+```
+
+**Detected pattern:**
+- **Source**: `req.params.id` (user-controlled)
+- **Flow**: Direct string interpolation (no sanitization)
+- **Sink**: `db.execute()` (SQL execution)
+
+**Suggested fix:**
+
+```javascript
+const userId = req.params.id;
+const query = 'SELECT * FROM users WHERE id = ?';
+db.execute(query, [userId]); // ✅ Parameterized query
+```
+
+### Control Flow Analysis
+
+Understanding execution paths for accurate detection:
+
+```python
+def process_file(filename):
+    if filename.startswith('/safe/'):
+        # Safe path - no warning
+        with open(filename) as f:
+            return f.read()
+    else:
+        # Unsafe path - VulnZap flags path traversal
+        with open(f'/data/{filename}') as f:  # ❌
+            return f.read()
+```
+
+VulnZap understands the control flow and only flags the vulnerable branch.
+
+### Agent Context Understanding
+
+For AI-generated code, VulnZap analyzes the prompt context:
+
+**Example prompt:**
+> "Create a user login endpoint that checks credentials against the database"
+
+**Generated code:**
+```javascript
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  const query = `SELECT * FROM users WHERE username='${username}' 
+                 AND password='${password}'`;
+  db.query(query, (err, result) => {
+    // ...
+  });
+});
+```
+
+**VulnZap analysis:**
+- Recognizes authentication context from prompt
+- Identifies SQL injection vulnerability
+- Notes lack of password hashing
+- Suggests secure implementation with parameterized queries + bcrypt
+
+## Exploitability Ranking
+
+Not all vulnerabilities are equal. VulnZap ranks by real-world risk:
+
+### Critical (9.0-10.0)
+- User-controlled input reaches dangerous sink
+- No existing mitigations
+- High impact (RCE, data exfiltration)
+- Publicly accessible code path
+
+### High (7.0-8.9)
+- Partial user control or mitigations
+- Significant impact
+- Reachable from authenticated paths
+
+### Medium (4.0-6.9)
+- Limited user control
+- Moderate impact
+- Some mitigations in place
+
+### Low (0.1-3.9)
+- Minimal user control
+- Low impact
+- Multiple mitigations
+- Theoretical exploitation
+
+<Tip>
+  Use `--min-severity high` to focus on critical issues first: `vulnzap scan --min-severity high`
+</Tip>
+
+## Patch Generation
+
+VulnZap generates context-aware patches that preserve your code style:
+
+### Style Preservation
+
+**Original:**
+```javascript
+const result=db.query(`SELECT * FROM users WHERE id=${id}`)
+```
+
+**VulnZap patch:**
+```javascript
+const result=db.query('SELECT * FROM users WHERE id=?',[id])
+```
+
+Notice: No reformatting, preserves spacing/style.
+
+### Framework-Aware Fixes
+
+Different frameworks require different approaches:
+
+<Tabs>
+  <Tab title="Express.js">
+    ```javascript
+    // Before
+    res.send(userInput);
+    
+    // After (HTML context)
+    res.send(escapeHtml(userInput));
+    ```
+  </Tab>
+  
+  <Tab title="Django">
+    ```python
+    # Before
+    return HttpResponse(user_input)
+    
+    # After
+    from django.utils.html import escape
+    return HttpResponse(escape(user_input))
+    ```
+  </Tab>
+  
+  <Tab title="Flask">
+    ```python
+    # Before
+    return f"<h1>{user_input}</h1>"
+    
+    # After
+    from markupsafe import escape
+    return f"<h1>{escape(user_input)}</h1>"
+    ```
+  </Tab>
+</Tabs>
+
+### Test Compatibility
+
+VulnZap ensures patches don't break existing tests:
+
+```javascript
+// Original function
+function getUser(id) {
+  return db.query(`SELECT * FROM users WHERE id=${id}`);
+}
+
+// Tests expect same return type
+test('getUser returns user object', () => {
+  const user = getUser(1);
+  expect(user).toHaveProperty('id');
+});
+
+// VulnZap patch maintains compatibility
+function getUser(id) {
+  return db.query('SELECT * FROM users WHERE id=?', [id]);
+  // Same return type, tests still pass ✅
+}
+```
+
+## Performance
+
+VulnZap is designed for speed:
+
+| Scan Type | Typical Speed | Caching |
+|-----------|---------------|---------|
+| Inline (diff only) | <100ms | File-level |
+| Full file | <500ms | AST-level |
+| Full repo (1000 files) | <30s | Incremental |
+| CI/CD (changed files) | <10s | Git-aware |
+
+<Info>
+  Incremental scanning only analyzes changed files, dramatically reducing CI/CD scan times.
+</Info>
+
+## Privacy & Security
+
+### Zero Data Retention
+
+By default, VulnZap never stores your source code:
+
+1. Code is analyzed in-memory
+2. Only metadata is stored (file paths, line numbers, vulnerability types)
+3. Analysis artifacts are immediately discarded
+4. Optional: Enable code snippets for dashboard context
+
+### Deployment Options
+
+<CardGroup cols={3}>
+  <Card title="Cloud" icon="cloud">
+    Fully managed, no infrastructure required
+  </Card>
+  <Card title="VPC" icon="server">
+    Deploy in your own AWS/GCP/Azure VPC
+  </Card>
+  <Card title="On-Premises" icon="building">
+    Complete air-gapped deployment
+  </Card>
+</CardGroup>
+
+See [Deployment Options](/team/deployment-options) for details.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Security Coverage"
+    icon="shield"
+    href="/features/security-coverage"
+  >
+    Learn what vulnerabilities VulnZap detects
+  </Card>
+  
+  <Card
+    title="Dashboard Guide"
+    icon="chart-line"
+    href="/features/dashboard"
+  >
+    Explore dashboard features and workflows
+  </Card>
+  
+  <Card
+    title="CLI Reference"
+    icon="terminal"
+    href="/integration/cli"
+  >
+    Master command-line options
+  </Card>
+  
+  <Card
+    title="API Documentation"
+    icon="code"
+    href="/api-reference/introduction"
+  >
+    Integrate programmatically
+  </Card>
+</CardGroup>
+
