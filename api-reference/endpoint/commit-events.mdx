@@ -1,0 +1,287 @@
+---
+title: "Commit Scan Events (SSE)"
+description: "GET /commit/:jobId/events - Server-Sent Events for real-time commit scan updates"
+---
+
+## Endpoint
+
+```
+GET https://api.vulnzap.com/api/scan/commit/:jobId/events
+```
+
+## Description
+
+Establishes a Server-Sent Events (SSE) connection that streams real-time updates during commit scans. Provides live progress, vulnerability detections, and completion notifications.
+
+<Info>
+  Commit scans are typically faster than full repository scans, completing in seconds to a few minutes depending on file count.
+</Info>
+
+## Headers
+
+<ParamField header="x-api-key" type="string" required>
+  Your VulnZap API key
+</ParamField>
+
+## Path Parameters
+
+<ParamField path="jobId" type="string" required>
+  Job ID from the commit scan initiation
+</ParamField>
+
+## Event Types
+
+All event types follow the same structure as GitHub Scan Events:
+
+### 1. Connected Event
+
+```json
+{
+  "type": "connected",
+  "jobId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "message": "Connected to scan progress stream",
+    "jobStatus": "running",
+    "progress": 0
+  },
+  "timestamp": "2025-11-14T10:30:00.000Z"
+}
+```
+
+### 2. Progress Event
+
+```json
+{
+  "type": "progress",
+  "jobId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "message": "Scanning auth.js..."
+  },
+  "timestamp": "2025-11-14T10:30:05.000Z"
+}
+```
+
+### 3. Vulnerability Event
+
+```json
+{
+  "type": "vulnerability",
+  "jobId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "id": "vuln_1731582930000_abc123",
+    "type": "HARDCODED_SECRET",
+    "severity": "critical",
+    "file": "src/auth.js",
+    "line": 3
+  },
+  "timestamp": "2025-11-14T10:30:07.000Z"
+}
+```
+
+### 4. Completed Event
+
+```json
+{
+  "type": "completed",
+  "jobId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "message": "Commit scan completed successfully"
+  },
+  "timestamp": "2025-11-14T10:30:15.000Z"
+}
+```
+
+### 5. Failed Event
+
+```json
+{
+  "type": "failed",
+  "jobId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "message": "Scan failed. Won't be billed for this scan."
+  },
+  "timestamp": "2025-11-14T10:30:10.000Z"
+}
+```
+
+### 6. Error Event
+
+```json
+{
+  "type": "error",
+  "jobId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "message": "Scan job not found",
+    "error": "Invalid job ID"
+  },
+  "timestamp": "2025-11-14T10:30:01.000Z"
+}
+```
+
+## Connection Behavior
+
+- Connection stays open until scan completes, fails, or client disconnects
+- Events are sent as `data: {json}\n\n` format (SSE standard)
+- Commit scans typically complete much faster than full repository scans
+
+## Example (JavaScript)
+
+```javascript
+const eventSource = new EventSource(
+  'https://api.vulnzap.com/api/scan/commit/550e8400-e29b-41d4-a716-446655440000/events',
+  {
+    headers: {
+      'x-api-key': 'your_api_key_here'
+    }
+  }
+);
+
+eventSource.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  
+  console.log(`[${data.type}]`, data.data.message);
+  
+  if (data.type === 'completed') {
+    console.log('✅ Scan completed!');
+    eventSource.close();
+  } else if (data.type === 'failed') {
+    console.error('❌ Scan failed');
+    eventSource.close();
+  }
+};
+
+eventSource.onerror = (error) => {
+  console.error('SSE connection error:', error);
+  eventSource.close();
+};
+```
+
+## Example (Node.js with Express)
+
+```javascript
+const express = require('express');
+const EventSource = require('eventsource');
+
+app.post('/scan-commit', async (req, res) => {
+  // Start commit scan
+  const scanResponse = await fetch('https://api.vulnzap.com/api/scan/commit', {
+    method: 'POST',
+    headers: {
+      'x-api-key': process.env.VULNZAP_API_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(req.body)
+  });
+  
+  const { jobId } = await scanResponse.json();
+  
+  // Connect to SSE
+  const es = new EventSource(
+    `https://api.vulnzap.com/api/scan/commit/${jobId}/events`,
+    {
+      headers: {
+        'x-api-key': process.env.VULNZAP_API_KEY
+      }
+    }
+  );
+  
+  es.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    
+    if (data.type === 'completed') {
+      res.json({ success: true, jobId });
+      es.close();
+    } else if (data.type === 'failed') {
+      res.json({ success: false, error: data.data.message });
+      es.close();
+    }
+  };
+});
+```
+
+## Example (Python)
+
+```python
+import requests
+import sseclient
+
+def scan_commit_with_sse(api_key, commit_data):
+    # Start scan
+    response = requests.post(
+        'https://api.vulnzap.com/api/scan/commit',
+        headers={
+            'x-api-key': api_key,
+            'Content-Type': 'application/json'
+        },
+        json=commit_data
+    )
+    
+    job_id = response.json()['data']['jobId']
+    
+    # Connect to SSE
+    headers = {'x-api-key': api_key}
+    response = requests.get(
+        f'https://api.vulnzap.com/api/scan/commit/{job_id}/events',
+        headers=headers,
+        stream=True
+    )
+    
+    client = sseclient.SSEClient(response)
+    
+    for event in client.events():
+        data = json.loads(event.data)
+        print(f"[{data['type']}]", data['data'].get('message', ''))
+        
+        if data['type'] in ['completed', 'failed']:
+            break
+```
+
+## Example (curl)
+
+```bash
+curl -N -H "x-api-key: your_api_key_here" \
+  https://api.vulnzap.com/api/scan/commit/550e8400-e29b-41d4-a716-446655440000/events
+```
+
+Output:
+
+```
+data: {"type":"connected","jobId":"...","data":{"message":"Connected to scan progress stream"},"timestamp":"2025-11-14T10:30:00.000Z"}
+
+data: {"type":"progress","jobId":"...","data":{"message":"Scanning auth.js..."},"timestamp":"2025-11-14T10:30:02.000Z"}
+
+data: {"type":"completed","jobId":"...","data":{"message":"Commit scan completed successfully"},"timestamp":"2025-11-14T10:30:08.000Z"}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use SSE for CI/CD">
+    Commit scans are perfect for CI/CD pipelines. Use SSE to get immediate feedback without polling.
+  </Accordion>
+  
+  <Accordion title="Handle Quick Completions">
+    Commit scans can complete in seconds. Ensure your client is ready to handle immediate `completed` events.
+  </Accordion>
+  
+  <Accordion title="Clean Up Connections">
+    Always close EventSource connections when scans complete or fail to avoid resource leaks.
+  </Accordion>
+  
+  <Accordion title="Error Handling">
+    Implement fallback to polling `/jobs/:jobId` if SSE connection fails or is not supported.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Get Job Status" icon="clock" href="/api-reference/endpoint/jobs">
+    Poll for status as a fallback
+  </Card>
+  
+  <Card title="Start Commit Scan" icon="code-commit" href="/api-reference/endpoint/commit">
+    Initiate a new scan
+  </Card>
+</CardGroup>
+

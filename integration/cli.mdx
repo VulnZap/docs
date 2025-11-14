@@ -9,127 +9,223 @@ icon: "terminal"
 Install VulnZap globally:
 
 ```bash
-npm i -g vulnzap
+npm install -g vulnzap
 ```
 
-Or use via npx:
+## Quick Start
+
+### 1. Complete Setup (Recommended)
+
+Complete onboarding with API key setup and IDE integration:
 
 ```bash
 npx vulnzap init
 ```
 
-## Authentication
+**This command will:**
+- Guide you through API key setup
+- Automatically detect installed IDEs (VS Code, Cursor, Windsurf)
+- Allow you to select multiple IDEs for integration
+- Configure MCP settings and install extensions
+- Set up your development environment for secure coding
 
-Set your API key as an environment variable:
-
-```bash
-export VULNZAP_API_KEY="your_api_key_here"
-```
-
-Get your API key from [vulnzap.com/dashboard](https://vulnzap.com/dashboard) → Settings → API Keys
-
-<Tip>
-  Add `VULNZAP_API_KEY` to your shell profile (`~/.bashrc`, `~/.zshrc`) to persist across sessions
-</Tip>
-
-## Commands
-
-### `vulnzap scan`
-
-Scan your codebase for security vulnerabilities.
+### 2. Manual Setup (Alternative)
 
 ```bash
-# Scan entire repository
-vulnzap scan
+# Setup API key only
+vulnzap setup -k <your-api-key>
 
-# Scan specific files
-vulnzap scan src/auth.js src/db/queries.ts
-
-# Scan directory
-vulnzap scan src/
+# Setup API key with specific IDE (cursor|windsurf|cline|vscode)
+vulnzap setup -k <your-api-key> --ide cursor
 ```
 
-### `vulnzap secure --ide <ide_name>`
+## Commands Reference
 
-Enable MCP integration for IDE security scanning.
+### Setup & Configuration
 
-**Supported IDEs:**
+#### `vulnzap init`
+
+Complete setup with guided onboarding (recommended):
 
 ```bash
-# For Cursor
-vulnzap secure --ide cursor
-
-# For Windsurf
-vulnzap secure --ide windsurf
+vulnzap init
 ```
 
-This command is used in MCP configuration files (`.cursor/mcp.json` or `.codeium/windsurf/mcp_config.json`).
+Interactive wizard that handles API key setup and IDE integration.
 
-## IDE Integration
+#### `vulnzap setup`
 
-### Cursor
+Setup API key manually:
 
-Create `.cursor/mcp.json`:
+```bash
+# Setup API key only
+vulnzap setup -k <api-key>
 
-```json
-{
-  "mcpServers": {
-    "VulnZap": {
-      "command": "vulnzap",
-      "args": ["secure", "--ide", "cursor"],
-      "env": {
-        "VULNZAP_API_KEY": "your_api_key_here"
-      }
-    }
-  }
-}
+# Setup API key with specific IDE
+vulnzap setup -k <api-key> --ide <cursor|vscode|windsurf>
 ```
 
-### Windsurf
+**Options:**
+- `-k, --key <api-key>` - Your VulnZap API key
+- `--ide <ide>` - Specific IDE to configure (cursor, vscode, windsurf, cline)
 
-Create `.codeium/windsurf/mcp_config.json`:
+#### `vulnzap account`
 
-```json
-{
-  "mcpServers": {
-    "VulnZap": {
-      "command": "vulnzap",
-      "args": ["secure", "--ide", "windsurf"],
-      "env": {
-        "VULNZAP_API_KEY": "your_api_key_here"
-      }
-    }
-  }
-}
+Check account information:
+
+```bash
+vulnzap account
 ```
 
-## CI/CD Integration
+Displays your account details, plan information, and usage statistics.
 
-### GitHub Actions
+#### `vulnzap status`
 
-```yaml
-- name: Run VulnZap Scan
-  run: vulnzap scan
-  env:
-    VULNZAP_API_KEY: ${{ secrets.VULNZAP_API_KEY }}
+Check server status:
+
+```bash
+vulnzap status
 ```
 
-### GitLab CI
+Shows connection status and MCP server health.
 
-```yaml
-vulnzap:
-  script:
-    - npm install -g vulnzap
-    - vulnzap scan
-  variables:
-    VULNZAP_API_KEY: $VULNZAP_API_KEY
+#### `vulnzap help`
+
+View help information:
+
+```bash
+vulnzap help
 ```
 
-## Environment Variables
+### Security Scanning
 
-<ParamField path="VULNZAP_API_KEY" type="string" required>
-  Your VulnZap API key for authentication
-</ParamField>
+#### `vulnzap check`
+
+Check individual package for vulnerabilities:
+
+```bash
+# Standard format
+vulnzap check <ecosystem:package@version>
+
+# Examples
+vulnzap check npm:express@4.17.1
+vulnzap check pip:requests@2.25.1
+vulnzap check pypi:django@3.1.0
+
+# Alternative syntax
+vulnzap check <package> --ecosystem <eco> --version <ver>
+vulnzap check express --ecosystem npm --version 4.17.1
+```
+
+**Supported Ecosystems:**
+- `npm` - Node.js packages
+- `pip` / `pypi` - Python packages
+- `maven` - Java packages
+- `go` - Go modules
+- `cargo` - Rust crates
+- `composer` - PHP packages
+- `rubygems` - Ruby gems
+
+#### `vulnzap batch-scan`
+
+Batch scan packages in current directory:
+
+```bash
+# Scan all package files in current directory
+vulnzap batch-scan
+
+# Scan specific ecosystem
+vulnzap batch-scan --ecosystem npm
+
+# Output to file
+vulnzap batch-scan --output scan-results.json
+```
+
+**Options:**
+- `--ecosystem <eco>` - Limit to specific package ecosystem
+- `--output <file>` - Save results to file
+
+**Detects:**
+- `package.json` (npm)
+- `requirements.txt` (pip)
+- `pom.xml` (maven)
+- `go.mod` (go)
+- `Cargo.toml` (cargo)
+- `composer.json` (php)
+- `Gemfile` (ruby)
+
+#### `vulnzap scan`
+
+Repository scan (GitHub):
+
+```bash
+vulnzap scan https://github.com/owner/repo
+
+# With options
+vulnzap scan https://github.com/owner/repo \
+  --branch main \
+  --wait \
+  --output report.json \
+  --key your_api_key
+```
+
+**Options:**
+- `--branch <branch>` - Specific branch to scan (default: main)
+- `--wait` - Wait for scan completion
+- `--output <file>` - Save results to file
+- `--key <api-key>` - Override API key for this scan
+
+### IDE Integration
+
+#### `vulnzap connect`
+
+Connect to a specific IDE (alternative to init/setup):
+
+```bash
+# Interactive IDE selection
+vulnzap connect
+
+# Connect to specific IDE
+vulnzap connect --ide cursor
+vulnzap connect --ide windsurf
+vulnzap connect --ide cline
+vulnzap connect --ide vscode
+```
+
+Configures MCP settings and installs necessary extensions.
+
+#### `vulnzap mcp`
+
+Start MCP server manually (for IDEs that use MCP):
+
+```bash
+vulnzap mcp
+```
+
+Runs the Model Context Protocol server for IDE integration. Typically called automatically by IDE configuration files.
+
+## Supported IDEs
+
+VulnZap integrates with the following IDEs:
+
+<CardGroup cols={2}>
+  <Card title="Cursor" icon="c">
+    Full MCP integration + extension
+  </Card>
+  <Card title="Windsurf" icon="wind">
+    Full MCP integration + extension
+  </Card>
+  <Card title="Cline" icon="terminal">
+    MCP integration supported
+  </Card>
+  <Card title="VS Code" icon="code">
+    Extension only (no MCP server)
+  </Card>
+</CardGroup>
+
+### Automatic IDE Detection
+
+The `init` command automatically detects which supported IDEs are installed on your system (VS Code, Cursor, Windsurf) and allows you to select multiple IDEs for integration.
 
 ## Getting Help
 

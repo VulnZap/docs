@@ -6,13 +6,14 @@ icon: "key"
 
 ## API Key Authentication
 
-All VulnZap API requests require authentication using an API key in the Authorization header.
+All VulnZap API requests require authentication using an API key in the `x-api-key` header.
 
 ### Basic Authentication
 
 ```bash
-curl https://api.vulnzap.com/v1/scans \
-  -H "Authorization: Bearer vzap_your_api_key_here"
+curl https://api.vulnzap.com/api/scan/github \
+  -H "x-api-key: your_api_key_here" \
+  -H "Content-Type: application/json"
 ```
 
 ### Creating an API Key
@@ -51,25 +52,26 @@ vulnzap auth
 **Environment Variable (Recommended):**
 
 ```bash
-export VULNZAP_API_KEY="vzap_abc123..."
-curl https://api.vulnzap.com/v1/scans \
-  -H "Authorization: Bearer $VULNZAP_API_KEY"
+export VULNZAP_API_KEY="your_api_key_here"
+curl https://api.vulnzap.com/api/scan/github \
+  -H "x-api-key: $VULNZAP_API_KEY" \
+  -H "Content-Type: application/json"
 ```
 
 **Request Header:**
 
 ```http
-GET /v1/scans HTTP/1.1
+POST /api/scan/github HTTP/1.1
 Host: api.vulnzap.com
-Authorization: Bearer vzap_abc123xyz...
+x-api-key: your_api_key_here
+Content-Type: application/json
 ```
 
-**SDK (automatic):**
+**CLI (automatic):**
 
-```javascript
-const client = new VulnZap({
-  apiKey: process.env.VULNZAP_API_KEY
-});
+```bash
+vulnzap setup -k your_api_key_here
+vulnzap scan https://github.com/owner/repo
 ```
 
 ## Key Types
@@ -142,41 +144,7 @@ const client = new VulnZap({
 Dashboard → Settings → API Keys → Select Key → Revoke
 ```
 
-**Via API:**
-
-```bash
-curl -X DELETE https://api.vulnzap.com/v1/api-keys/key_abc123 \
-  -H "Authorization: Bearer vzap_admin_key..."
-```
-
-**Effect:** Immediate - all requests with revoked key will fail.
-
-## Testing Authentication
-
-```bash
-curl https://api.vulnzap.com/v1/auth/verify \
-  -H "Authorization: Bearer vzap_your_key..."
-```
-
-**Success Response:**
-
-```json
-{
-  "authenticated": true,
-  "user_id": "user_xyz789",
-  "scopes": ["read", "write"],
-  "expires_at": null
-}
-```
-
-**Error Response:**
-
-```json
-{
-  "error": "invalid_credentials",
-  "message": "Invalid or expired API key"
-}
-```
+**Effect:** Immediate - all requests with revoked key will fail with `401 Unauthorized`.
 
 ## Next Steps
 
@@ -190,11 +158,27 @@ curl https://api.vulnzap.com/v1/auth/verify \
   </Card>
   
   <Card
-    title="Scan Endpoint"
-    icon="magnifying-glass"
-    href="/api-reference/endpoint/scan"
+    title="Start GitHub Scan"
+    icon="github"
+    href="/api-reference/endpoint/github"
   >
-    Create and manage scans
+    Scan GitHub repositories
+  </Card>
+  
+  <Card
+    title="Start Commit Scan"
+    icon="code-commit"
+    href="/api-reference/endpoint/commit"
+  >
+    Scan specific files
+  </Card>
+  
+  <Card
+    title="Get Job Status"
+    icon="clock"
+    href="/api-reference/endpoint/jobs"
+  >
+    Check scan progress
   </Card>
 </CardGroup>
 

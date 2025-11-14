@@ -1,0 +1,145 @@
+---
+title: "Start GitHub Repository Scan"
+description: "POST /github - Initiate a security scan for an entire GitHub repository"
+---
+
+## Endpoint
+
+```
+POST https://api.vulnzap.com/api/scan/github
+```
+
+## Description
+
+Initiates a security scan for an entire GitHub repository using Faraday's multi-agent scanning engine.
+
+## Headers
+
+<ParamField header="x-api-key" type="string" required>
+  Your VulnZap API key
+</ParamField>
+
+<ParamField header="Content-Type" type="string" required>
+  Must be `application/json`
+</ParamField>
+
+## Request Body
+
+<ParamField body="repository" type="string" required>
+  GitHub repository in `owner/repo` format (e.g., `facebook/react`)
+</ParamField>
+
+<ParamField body="branch" type="string">
+  Branch to scan (default: `main`)
+</ParamField>
+
+<ParamField body="userIdentifier" type="string">
+  Optional identifier for tracking purposes
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Whether the request was successful
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  Scan job details
+  
+  <Expandable title="properties">
+    <ResponseField name="jobId" type="string">
+      Unique job identifier (UUID v4)
+    </ResponseField>
+    
+    <ResponseField name="projectId" type="string">
+      Project identifier (UUID v4)
+    </ResponseField>
+    
+    <ResponseField name="status" type="string">
+      Job status: `pending`, `running`, `completed`, `failed`
+    </ResponseField>
+    
+    <ResponseField name="message" type="string">
+      Human-readable status message
+    </ResponseField>
+    
+    <ResponseField name="repository" type="string">
+      Repository being scanned
+    </ResponseField>
+    
+    <ResponseField name="branch" type="string">
+      Branch being scanned
+    </ResponseField>
+    
+    <ResponseField name="remaining" type="number">
+      Remaining scans in your plan
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Request
+
+```bash
+curl -X POST https://api.vulnzap.com/api/scan/github \
+  -H "x-api-key: your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "repository": "facebook/react",
+    "branch": "main"
+  }'
+```
+
+## Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "jobId": "550e8400-e29b-41d4-a716-446655440000",
+    "projectId": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "status": "pending",
+    "message": "GitHub repository scan started successfully",
+    "repository": "facebook/react",
+    "branch": "main",
+    "remaining": 100
+  }
+}
+```
+
+## Error Responses
+
+<ResponseExample>
+```json 400 Bad Request
+{
+  "success": false,
+  "error": "Invalid repository format. Expected 'owner/repo'"
+}
+```
+
+```json 403 Forbidden
+{
+  "success": false,
+  "error": "Subscription limit exceeded. You have used 100 of 100 scans this month."
+}
+```
+
+```json 500 Internal Server Error
+{
+  "success": false,
+  "error": "Failed to start scan. Please try again."
+}
+```
+</ResponseExample>
+
+## Next Steps
+
+After initiating a scan:
+
+1. **Use SSE for real-time updates**: Connect to `/github/:jobId/events` for live progress
+2. **Poll for status**: Call `/jobs/:jobId` to check scan progress
+3. **Retrieve results**: Once completed, results are in the job response
+
+<Card title="Real-Time Updates" icon="rss" href="/api-reference/endpoint/github-events">
+  Stream live scan progress with Server-Sent Events
+</Card>
+

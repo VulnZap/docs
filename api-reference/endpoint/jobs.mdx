@@ -1,0 +1,302 @@
+---
+title: "Get Scan Job Status"
+description: "GET /jobs/:jobId - Retrieve the status and results of a scan job"
+---
+
+## Endpoint
+
+```
+GET https://api.vulnzap.com/api/scan/jobs/:jobId
+```
+
+## Description
+
+Retrieves the status and results of a specific scan job. Use this endpoint to poll for scan completion or retrieve final results.
+
+## Headers
+
+<ParamField header="x-api-key" type="string" required>
+  Your VulnZap API key
+</ParamField>
+
+## Path Parameters
+
+<ParamField path="jobId" type="string" required>
+  Job ID returned from scan initiation (`/github` or `/commit` endpoints)
+</ParamField>
+
+## Job Status Values
+
+| Status | Description |
+|--------|-------------|
+| `pending` | Job is queued and waiting to start |
+| `running` | Scan is currently in progress |
+| `completed` | Scan finished successfully |
+| `failed` | Scan encountered an error |
+| `cancelled` | Scan was cancelled by user |
+
+## Response (Running)
+
+```json
+{
+  "success": true,
+  "data": {
+    "jobId": "550e8400-e29b-41d4-a716-446655440000",
+    "projectId": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "status": "running",
+    "progress": 45,
+    "metadata": {
+      "repository": "owner/repo",
+      "branch": "main",
+      "scanType": "full_repository"
+    },
+    "startedAt": "2025-11-14T10:30:00.000Z",
+    "completedAt": null,
+    "error": null
+  }
+}
+```
+
+## Response (Completed)
+
+When scan completes successfully, full results are included:
+
+```json
+{
+  "success": true,
+  "data": {
+    "jobId": "550e8400-e29b-41d4-a716-446655440000",
+    "projectId": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "status": "completed",
+    "progress": 100,
+    "metadata": {
+      "repository": "owner/repo",
+      "branch": "main",
+      "scanType": "full_repository"
+    },
+    "startedAt": "2025-11-14T10:30:00.000Z",
+    "completedAt": "2025-11-14T10:35:30.000Z",
+    "error": null,
+    "results": {
+      "scanId": "repositoryscan_1731582930000_abc123",
+      "repositoryId": "project-id",
+      "timestamp": "2025-11-14T10:35:30.000Z",
+      "scanType": "full",
+      "totalFiles": 150,
+      "linesOfCode": 25000,
+      "vulnerabilities": [
+        {
+          "id": "vuln_1731582930000_abc123",
+          "type": "SQL_INJECTION",
+          "severity": "critical",
+          "confidence": "high",
+          "location": {
+            "file": "src/api/users.ts",
+            "startLine": 45,
+            "startColumn": 12,
+            "endLine": 45,
+            "endColumn": 65,
+            "codeSnippet": "const query = `SELECT * FROM users WHERE id = ${userId}`;"
+          },
+          "description": "SQL injection vulnerability detected in user query",
+          "evidence": "Unsanitized user input directly concatenated into SQL query",
+          "cwe": "CWE-89",
+          "owasp": "A03:2021-Injection",
+          "tags": ["sql", "injection", "critical"],
+          "falsePositive": false,
+          "detectionMethod": "taint",
+          "createdAt": "2025-11-14T10:35:25.000Z",
+          "source": {
+            "file": "src/api/users.ts",
+            "startLine": 42,
+            "startColumn": 8,
+            "endLine": 42,
+            "endColumn": 30,
+            "codeSnippet": "const userId = req.params.id;"
+          },
+          "sink": {
+            "file": "src/api/users.ts",
+            "startLine": 45,
+            "startColumn": 12,
+            "endLine": 45,
+            "endColumn": 65,
+            "codeSnippet": "const query = `SELECT * FROM users WHERE id = ${userId}`;"
+          },
+          "taintFlowPath": [
+            {
+              "stepNumber": 1,
+              "file": "src/api/users.ts",
+              "line": 42,
+              "column": 8,
+              "codeSnippet": "const userId = req.params.id;",
+              "description": "User input received from request parameters"
+            },
+            {
+              "stepNumber": 2,
+              "file": "src/api/users.ts",
+              "line": 45,
+              "column": 12,
+              "codeSnippet": "const query = `SELECT * FROM users WHERE id = ${userId}`;",
+              "description": "Tainted data flows into SQL query without sanitization"
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "critical": 5,
+        "high": 12,
+        "medium": 8,
+        "low": 3,
+        "info": 2,
+        "total": 30
+      },
+      "processingStats": {
+        "duration": 330000,
+        "tokensUsed": 125000,
+        "falsePositivesFiltered": 15,
+        "duplicatesRemoved": 8
+      }
+    },
+    "resultId": "result-uuid",
+    "createdAt": "2025-11-14T10:35:30.000Z",
+    "publicShareUrl": "abc123de"
+  }
+}
+```
+
+## Response (Shared Scan)
+
+For scans that share results with other users scanning the same repository/branch:
+
+```json
+{
+  "success": true,
+  "data": {
+    "jobId": "your-job-id",
+    "projectId": "your-project-id",
+    "status": "running",
+    "progress": 45,
+    "metadata": {
+      "repository": "owner/repo",
+      "branch": "main"
+    },
+    "startedAt": "2025-11-14T10:30:00.000Z",
+    "completedAt": null,
+    "error": null,
+    "isSharedScan": true,
+    "originalJobId": "original-job-uuid"
+  }
+}
+```
+
+## Vulnerability Object Schema
+
+Each vulnerability includes the following fields:
+
+### Common Fields
+
+<ResponseField name="id" type="string">
+  Unique vulnerability identifier
+</ResponseField>
+
+<ResponseField name="type" type="string">
+  Vulnerability type (e.g., `SQL_INJECTION`, `XSS`, `PATH_TRAVERSAL`)
+</ResponseField>
+
+<ResponseField name="severity" type="enum">
+  Severity level: `critical`, `high`, `medium`, `low`, or `info`
+</ResponseField>
+
+<ResponseField name="confidence" type="enum">
+  Detection confidence: `high`, `medium`, or `low`
+</ResponseField>
+
+<ResponseField name="location" type="object">
+  Primary location with file path, line numbers, and code snippet
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Clear description of the vulnerability
+</ResponseField>
+
+<ResponseField name="evidence" type="string">
+  Evidence supporting the finding
+</ResponseField>
+
+<ResponseField name="cwe" type="string">
+  CWE identifier (e.g., `CWE-89`)
+</ResponseField>
+
+<ResponseField name="owasp" type="string">
+  OWASP category (e.g., `A03:2021-Injection`)
+</ResponseField>
+
+<ResponseField name="tags" type="array">
+  Tags for categorization
+</ResponseField>
+
+<ResponseField name="falsePositive" type="boolean">
+  Whether Faraday's Context Validator marked this as a false positive
+</ResponseField>
+
+<ResponseField name="detectionMethod" type="enum">
+  Detection method: `standalone` or `taint`
+</ResponseField>
+
+### Taint-Specific Fields
+
+Only present when `detectionMethod: "taint"`:
+
+<ResponseField name="source" type="object">
+  Where tainted data originates (e.g., user input)
+</ResponseField>
+
+<ResponseField name="sink" type="object">
+  Where tainted data reaches dangerous operation
+</ResponseField>
+
+<ResponseField name="taintFlowPath" type="array">
+  Step-by-step flow from source to sink
+</ResponseField>
+
+## Example Request
+
+```bash
+curl -X GET https://api.vulnzap.com/api/scan/jobs/550e8400-e29b-41d4-a716-446655440000 \
+  -H "x-api-key: your_api_key_here"
+```
+
+## Error Responses
+
+<ResponseExample>
+```json 404 Not Found
+{
+  "success": false,
+  "error": "Job not found or doesn't belong to your account"
+}
+```
+
+```json 500 Internal Server Error
+{
+  "success": false,
+  "error": "Failed to fetch job status"
+}
+```
+</ResponseExample>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Polling Interval">
+    If using polling instead of SSE, poll every 5-10 seconds to avoid rate limits.
+  </Accordion>
+  
+  <Accordion title="Use SSE When Possible">
+    For real-time updates, use the SSE endpoints (`/github/:scanId/events` or `/commit/:jobId/events`) instead of polling.
+  </Accordion>
+  
+  <Accordion title="Handle Shared Scans">
+    Check for the `isSharedScan` field. When true, multiple users are scanning the same repo/branch and share results.
+  </Accordion>
+</AccordionGroup>
+

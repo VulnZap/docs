@@ -1,0 +1,154 @@
+---
+title: "Start Commit Scan"
+description: "POST /commit - Scan specific files from a commit for security vulnerabilities"
+---
+
+## Endpoint
+
+```
+POST https://api.vulnzap.com/api/scan/commit
+```
+
+## Description
+
+Scans specific files from a commit for security vulnerabilities using Faraday's multi-agent engine. Ideal for incremental scans and CI/CD pipelines.
+
+## Headers
+
+<ParamField header="x-api-key" type="string" required>
+  Your VulnZap API key
+</ParamField>
+
+<ParamField header="Content-Type" type="string" required>
+  Must be `application/json`
+</ParamField>
+
+## Request Body
+
+<ParamField body="commitHash" type="string" required>
+  Git commit hash
+</ParamField>
+
+<ParamField body="repository" type="string">
+  Repository identifier (e.g., `owner/repo`)
+</ParamField>
+
+<ParamField body="branch" type="string">
+  Branch name
+</ParamField>
+
+<ParamField body="files" type="array" required>
+  Array of file objects to scan
+  
+  <Expandable title="File Object">
+    <ParamField body="name" type="string" required>
+      Relative file path (e.g., `src/api/auth.ts`)
+    </ParamField>
+    
+    <ParamField body="content" type="string" required>
+      Complete file content
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="userIdentifier" type="string">
+  Optional identifier for tracking purposes
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Whether the request was successful
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  Scan job details
+  
+  <Expandable title="properties">
+    <ResponseField name="jobId" type="string">
+      Unique job identifier (UUID v4)
+    </ResponseField>
+    
+    <ResponseField name="projectId" type="string">
+      Project identifier (UUID v4)
+    </ResponseField>
+    
+    <ResponseField name="status" type="string">
+      Job status: `pending`, `running`, `completed`, `failed`
+    </ResponseField>
+    
+    <ResponseField name="message" type="string">
+      Human-readable status message
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Request
+
+```bash
+curl -X POST https://api.vulnzap.com/api/scan/commit \
+  -H "x-api-key: your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "commitHash": "abc123def456",
+    "repository": "owner/repo",
+    "branch": "main",
+    "files": [
+      {
+        "name": "src/auth.js",
+        "content": "const password = \"hardcoded123\";"
+      }
+    ]
+  }'
+```
+
+## Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "jobId": "550e8400-e29b-41d4-a716-446655440000",
+    "projectId": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "status": "pending",
+    "message": "Commit scan started successfully"
+  }
+}
+```
+
+## Error Responses
+
+<ResponseExample>
+```json 400 Bad Request
+{
+  "success": false,
+  "error": "Invalid request body. Missing required field: files"
+}
+```
+
+```json 403 Forbidden
+{
+  "success": false,
+  "error": "Subscription limit exceeded"
+}
+```
+
+```json 500 Internal Server Error
+{
+  "success": false,
+  "error": "Failed to start scan"
+}
+```
+</ResponseExample>
+
+## Next Steps
+
+After initiating a scan:
+
+1. **Use SSE for real-time updates**: Connect to `/commit/:jobId/events` for live progress
+2. **Poll for status**: Call `/jobs/:jobId` to check scan progress and retrieve results
+
+<Card title="Real-Time Updates" icon="rss" href="/api-reference/endpoint/commit-events">
+  Stream live scan progress with Server-Sent Events
+</Card>
+

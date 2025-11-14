@@ -1,6 +1,7 @@
 ---
 title: "VulnZap Documentation"
 description: "Let agents code. We keep it safe. Real-time security scanning with merge-ready, minimal fixes."
+icon: "book"
 ---
 
 ## What is VulnZap?
@@ -22,22 +23,10 @@ VulnZap is built for how you ship—agent-aware scanning that understands prompt
 
 <Columns cols={2}>
   <Card
-    title="Agent-Aware Scanning"
+    title="Multi-agent based Scanning"
     icon="robot"
   >
-    Understands prompts, tool outputs, and AI-generated diffs to prevent insecure code before deployment
-  </Card>
-  <Card
-    title="Inline & Full-Repo Scans"
-    icon="magnifying-glass-chart"
-  >
-    Editor extensions scan on save, while repo-level sweeps rank vulnerabilities by risk
-  </Card>
-  <Card
-    title="OWASP-Aligned Fixes"
-    icon="shield-check"
-  >
-    Automatically patches SQLi, XSS, path traversal, command injection, and more with explainable payloads
+    Specialized agents scan different aspects of your repositories so nothing goes unnoticed.
   </Card>
   <Card
     title="MCP Protocol Native"
@@ -52,10 +41,10 @@ VulnZap is built for how you ship—agent-aware scanning that understands prompt
     Lightweight GitHub Actions block risky merges without slowing down pipelines
   </Card>
   <Card
-    title="Team Dashboard"
+    title="Wrapper lib for Devs"
     icon="users"
   >
-    Posture overviews, shared keys, audit trails, and cross-repo management
+    Acess our APIs easily through our open-sourced **[vulnzap-lib](https://github.com/vulnzap/vulnzap-lib)**
   </Card>
 </Columns>
 
@@ -64,40 +53,16 @@ VulnZap is built for how you ship—agent-aware scanning that understands prompt
 Install, connect, and scan in under five minutes.
 
 <Steps>
-  <Step title="Install">
-    `npx vulnzap init` or `npm i -g vulnzap`
-  </Step>
-  <Step title="Integrate">
-    Authenticate once, pick the repo or workspace, enable inline detection
+  <Step title="Install and Authenticate">
+    `npx vulnzap init` or `npm i -g vulnzap && npx vulnzap init`
   </Step>
   <Step title="Scan and fix">
-    Findings stream to editor, CLI, and CI with ready-to-merge patches
-  </Step>
-  <Step title="Policies">
-    Toggle SOC 2-aligned policies, logging, and egress controls when needed
+    Your agent runs commit scans before pushing to remote. 
   </Step>
   <Step title="Deploy">
     Merge clean diffs and keep CI fast
   </Step>
 </Steps>
-
-## Supported Languages
-
-<Columns cols={3}>
-  <Card title="JavaScript" icon="js">
-    Production ready
-  </Card>
-  <Card title="TypeScript" icon="code">
-    Production ready
-  </Card>
-  <Card title="Python" icon="python">
-    Production ready
-  </Card>
-</Columns>
-
-<Info>
-  **Coming Soon**: Go, Rust, Java, .NET, Ruby, PHP, Docker, Terraform, Kubernetes, Swift
-</Info>
 
 ## Why VulnZap?
 
@@ -109,7 +74,7 @@ Install, connect, and scan in under five minutes.
     Context-aware, style-safe fixes that minimize churn
   </Card>
   <Card title="Low Noise, Strong Signal" icon="signal-bars">
-    Designed for developer velocity with minimal false positives
+    Designed for developer velocity with close to 0 false positives
   </Card>
 </CardGroup>
 
@@ -117,7 +82,7 @@ Install, connect, and scan in under five minutes.
 
 <AccordionGroup>
   <Accordion title="Zero Data Retention">
-    Source code is never persisted by default. Your code stays in your infrastructure.
+    Source code is never persisted by default.
   </Accordion>
   <Accordion title="Deployment Options">
     Choose VulnZap cloud, your own VPC, or fully on-premises deployment.

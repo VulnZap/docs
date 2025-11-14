@@ -1,0 +1,239 @@
+---
+title: "GitHub Scan Events (SSE)"
+description: "GET /github/:scanId/events - Server-Sent Events for real-time GitHub scan updates"
+---
+
+## Endpoint
+
+```
+GET https://api.vulnzap.com/api/scan/github/:scanId/events
+```
+
+## Description
+
+Establishes a Server-Sent Events (SSE) connection that streams real-time updates during GitHub repository scans. Provides live progress, vulnerability detections, and completion notifications.
+
+## Headers
+
+<ParamField header="x-api-key" type="string" required>
+  Your VulnZap API key
+</ParamField>
+
+## Path Parameters
+
+<ParamField path="scanId" type="string" required>
+  Job ID from the GitHub scan initiation
+</ParamField>
+
+## Event Types
+
+### 1. Connected Event
+
+Sent immediately upon successful connection.
+
+```json
+{
+  "type": "connected",
+  "scanId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "message": "Connected to scan progress stream",
+    "jobStatus": "running",
+    "progress": 0
+  },
+  "timestamp": "2025-11-14T10:30:00.000Z"
+}
+```
+
+### 2. Progress Event
+
+Sent periodically during the scan with status updates.
+
+```json
+{
+  "type": "progress",
+  "scanId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "message": "Analyzing security patterns in TypeScript files..."
+  },
+  "timestamp": "2025-11-14T10:31:15.000Z"
+}
+```
+
+### 3. Vulnerability Event
+
+Sent when a vulnerability is detected (optional, based on scan configuration).
+
+```json
+{
+  "type": "vulnerability",
+  "scanId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "id": "vuln_1731582930000_abc123",
+    "type": "SQL_INJECTION",
+    "severity": "critical",
+    "file": "src/api/users.ts",
+    "line": 45
+  },
+  "timestamp": "2025-11-14T10:32:45.000Z"
+}
+```
+
+### 4. Completed Event
+
+Sent when the scan finishes successfully.
+
+```json
+{
+  "type": "completed",
+  "scanId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "message": "Scan completed for owner/repo"
+  },
+  "timestamp": "2025-11-14T10:35:30.000Z"
+}
+```
+
+### 5. Failed Event
+
+Sent when the scan encounters an error.
+
+```json
+{
+  "type": "failed",
+  "scanId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "message": "Scan failed for owner/repo (main). Won't be billed for this scan."
+  },
+  "timestamp": "2025-11-14T10:33:00.000Z"
+}
+```
+
+### 6. Error Event
+
+Sent for connection-level errors.
+
+```json
+{
+  "type": "error",
+  "scanId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "message": "Scan job not found",
+    "error": "Invalid scan ID"
+  },
+  "timestamp": "2025-11-14T10:30:01.000Z"
+}
+```
+
+## Connection Behavior
+
+<Info>
+  - Connection stays open until scan completes, fails, or client disconnects
+  - Events are sent as `data: {json}\n\n` format (SSE standard)
+  - If auto-cancellation is enabled (default), disconnecting all clients will cancel the scan
+</Info>
+
+## Example (JavaScript)
+
+```javascript
+const eventSource = new EventSource(
+  'https://api.vulnzap.com/api/scan/github/550e8400-e29b-41d4-a716-446655440000/events',
+  {
+    headers: {
+      'x-api-key': 'your_api_key_here'
+    }
+  }
+);
+
+eventSource.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  
+  switch(data.type) {
+    case 'connected':
+      console.log('Connected to scan stream');
+      break;
+    case 'progress':
+      console.log('Progress:', data.data.message);
+      break;
+    case 'vulnerability':
+      console.warn(`Found ${data.data.severity} vulnerability in ${data.data.file}`);
+      break;
+    case 'completed':
+      console.log('Scan completed!');
+      eventSource.close();
+      break;
+    case 'failed':
+      console.error('Scan failed:', data.data.message);
+      eventSource.close();
+      break;
+  }
+};
+
+eventSource.onerror = (error) => {
+  console.error('SSE error:', error);
+  eventSource.close();
+};
+```
+
+## Example (Node.js)
+
+```javascript
+const EventSource = require('eventsource');
+
+const es = new EventSource(
+  'https://api.vulnzap.com/api/scan/github/550e8400-e29b-41d4-a716-446655440000/events',
+  {
+    headers: {
+      'x-api-key': 'your_api_key_here'
+    }
+  }
+);
+
+es.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  console.log(`[${data.type}]`, data.data);
+  
+  if (data.type === 'completed' || data.type === 'failed') {
+    es.close();
+  }
+};
+```
+
+## Example (curl)
+
+```bash
+curl -N -H "x-api-key: your_api_key_here" \
+  https://api.vulnzap.com/api/scan/github/550e8400-e29b-41d4-a716-446655440000/events
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Reconnection Strategy">
+    Implement automatic reconnection with exponential backoff if the connection drops unexpectedly.
+  </Accordion>
+  
+  <Accordion title="Handle All Event Types">
+    Always handle `completed`, `failed`, and `error` events to properly close connections and clean up resources.
+  </Accordion>
+  
+  <Accordion title="Timeout Handling">
+    Set a reasonable timeout for scans (typically 10-15 minutes for full repository scans). If exceeded, close connection and poll `/jobs/:jobId` endpoint.
+  </Accordion>
+  
+  <Accordion title="Browser Compatibility">
+    EventSource is natively supported in modern browsers. For older browsers, use a polyfill like `eventsource-polyfill`.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Get Job Status" icon="clock" href="/api-reference/endpoint/jobs">
+    Poll for status as a fallback
+  </Card>
+  
+  <Card title="Start GitHub Scan" icon="github" href="/api-reference/endpoint/github">
+    Initiate a new scan
+  </Card>
+</CardGroup>
+

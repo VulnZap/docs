@@ -5,11 +5,7 @@
   "colors": {
     "primary": "#4A72FF",
     "light": "#6B8AFF",
-    "dark": "#2952E5",
-    "background": {
-      "light": "#FFFFFF",
-      "dark": "#0C0C0C"
-    }
+    "dark": "#2952E5"
   },
   "favicon": "/favicon.svg",
   "navigation": {
@@ -21,16 +17,13 @@
             "group": "Getting Started",
             "pages": [
               "index",
-              "quickstart",
               "how-it-works"
             ]
           },
           {
             "group": "Core Features",
             "pages": [
-              "features/dashboard",
               "features/scanning",
-              "features/security-coverage",
               "features/ide-integration"
             ]
           },
@@ -38,24 +31,13 @@
             "group": "Integration",
             "pages": [
               "integration/cli",
-              "integration/ci-cd",
-              "integration/mcp-protocol"
-            ]
-          },
-          {
-            "group": "Team & Enterprise",
-            "pages": [
-              "team/management",
-              "team/deployment-options",
-              "team/compliance"
+              "integration/ci-cd"
             ]
           },
           {
             "group": "Resources",
             "pages": [
               "resources/pricing",
-              "resources/supported-languages",
-              "resources/troubleshooting",
               "resources/faq"
             ]
           }
@@ -74,10 +56,11 @@
           {
             "group": "Endpoints",
             "pages": [
-              "api-reference/endpoint/scan",
-              "api-reference/endpoint/findings",
-              "api-reference/endpoint/projects",
-              "api-reference/endpoint/patches"
+              "api-reference/endpoint/github",
+              "api-reference/endpoint/commit",
+              "api-reference/endpoint/jobs",
+              "api-reference/endpoint/github-events",
+              "api-reference/endpoint/commit-events"
             ]
           }
         ]

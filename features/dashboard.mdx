@@ -8,7 +8,7 @@ icon: "chart-line"
 
 The VulnZap dashboard provides a centralized view of your security posture, scan history, vulnerability findings, and team management.
 
-Access the dashboard at: [app.vulnzap.com/dashboard](https://vulnzap.com/dashboard/dashboard)
+Access the dashboard at: [vulnzap.com/dashboard](https://vulnzap.com/dashboard/dashboard)
 
 ## Main Dashboard
 
@@ -18,73 +18,6 @@ The landing page displays your current security posture:
 
 <img src="/images/dashboard-overview.png" alt="Dashboard Overview" />
 
-**Key Metrics:**
-
-<CardGroup cols={2}>
-  <Card title="Risk Score" icon="gauge">
-    0-100 scale based on severity and quantity of findings
-    - **0-25**: Low Risk (Green)
-    - **26-50**: Medium Risk (Yellow)
-    - **51-75**: High Risk (Orange)
-    - **76-100**: Critical Risk (Red)
-  </Card>
-  
-  <Card title="Total Scans" icon="magnifying-glass">
-    Cumulative scans across all projects
-    - Click to view scan history
-    - Filter by date range
-    - Export scan reports
-  </Card>
-  
-  <Card title="Active Findings" icon="triangle-exclamation">
-    Current unresolved vulnerabilities
-    - Grouped by severity
-    - Real-time updates
-    - Quick-fix actions
-  </Card>
-  
-  <Card title="Projects" icon="folder">
-    Connected repositories and workspaces
-    - Add/remove projects
-    - Per-project risk scores
-    - Last scan timestamps
-  </Card>
-</CardGroup>
-
-### Vulnerability Trends
-
-6-month historical chart showing vulnerability trends:
-
-```
-Critical  ▁▂▃▄▃▂▁  Trending down ✅
-High      ▃▄▅▄▃▂▁  Improving
-Medium    ▅▅▄▄▃▃▂  Stable
-Low       ▇▇▇▆▆▅▅  Slight increase
-```
-
-**Insights:**
-- Hover over data points for exact counts
-- Click severity labels to filter
-- Export data as CSV or JSON
-
-### Weekly Activity
-
-Bar chart showing scans performed and findings discovered:
-
-| Day | Scans | Findings |
-|-----|-------|----------|
-| Mon | 15    | 8        |
-| Tue | 12    | 5        |
-| Wed | 18    | 11       |
-| Thu | 10    | 3        |
-| Fri | 14    | 7        |
-| Sat | 3     | 1        |
-| Sun | 2     | 0        |
-
-<Info>
-  Activity metrics help identify which days your team is most actively addressing security issues.
-</Info>
-
 ## Projects Section
 
 ### Managing Projects
@@ -93,31 +26,17 @@ View and manage all connected repositories:
 
 <img src="/images/projects-list.png" alt="Projects List" />
 
-**Project Card Details:**
-- Repository name and URL
-- Current risk score
-- Last scan date and status
-- Quick action buttons
-
 ### Adding a Project
+
+**Pre-requisite** Authenticate with GitHub and grant repository access -> [settings](https://vulnzap.com/dashboard/settings)
 
 <Steps>
   <Step title="Click 'Add Project'">
     Navigate to Projects → Add New Project
   </Step>
   
-  <Step title="Connect GitHub">
-    Authenticate with GitHub and grant repository access
-  </Step>
-  
   <Step title="Select Repository">
-    Choose from available repositories (84 remaining in your account)
-  </Step>
-  
-  <Step title="Configure Settings">
-    - Enable/disable automatic scanning
-    - Set scan schedule (hourly, daily, on-push)
-    - Configure notification preferences
+    Choose from available repositories
   </Step>
   
   <Step title="Run Initial Scan">
@@ -563,14 +482,6 @@ Configure alert preferences:
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card
-    title="Security Coverage"
-    icon="shield"
-    href="/features/security-coverage"
-  >
-    Learn what vulnerabilities VulnZap detects
-  </Card>
-  
   <Card
     title="IDE Integration"
     icon="code"

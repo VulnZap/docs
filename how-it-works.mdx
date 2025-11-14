@@ -1,221 +1,218 @@
 ---
 title: "How It Works"
-description: "Understanding VulnZap's architecture and scanning methodology"
+description: "Understanding VulnZap's Faraday multi-agent architecture"
 icon: "gear"
 ---
 
 ## Overview
 
-VulnZap combines static analysis, agent-aware context understanding, and exploitability-first ranking to deliver actionable security insights with minimal false positives.
+VulnZap's **Faraday engine** represents a paradigm shift from rule-based scanning to intelligent, context-aware security analysis. Instead of rigid AST traversal, Faraday deploys specialized AI agents that collaborate like a human security team.
 
-## Architecture
+## Faraday: Multi-Agent Architecture
+
+Faraday coordinates a team of specialized agents, each with distinct expertise:
 
 <Steps>
-  <Step title="Code Collection">
-    VulnZap integrates at multiple touchpoints:
-    - **IDE Integration**: Real-time scanning via MCP protocol
-    - **CLI Integration**: On-demand and watch mode scanning
-    - **CI/CD Integration**: Automated scanning in pipelines
-    - **API Integration**: Programmatic scanning workflows
+  <Step title="Vulnerability Scanner Agent">
+    **Deep code analysis across multiple layers**
+    
+    - Intra-file analysis: Single-file vulnerability detection
+    - Inter-file analysis: Cross-file data flow tracking
+    - Architectural analysis: System-wide security patterns
+    - Hybrid approach: Traditional taint analysis + AI semantic reasoning
   </Step>
   
-  <Step title="Analysis Engine">
-    Multi-layered analysis identifies vulnerabilities:
-    - **Abstract Syntax Tree (AST) Analysis**: Parse code structure
-    - **Data Flow Analysis**: Track tainted data propagation
-    - **Control Flow Analysis**: Understand execution paths
-    - **Agent Context Analysis**: Parse AI prompts and tool outputs
+  <Step title="Context Validator Agent">
+    **The game-changer—eliminates false positives**
+    
+    - Uses file system tools (grep, readFile, find) to cross-reference findings
+    - Verifies vulnerabilities against actual code evidence
+    - Understands sanitization, validation, and protection layers
+    - Eliminates 90%+ of false positives through real-world context understanding
   </Step>
   
-  <Step title="Vulnerability Detection">
-    OWASP-aligned detection patterns identify issues:
-    - SQL Injection (A03:2021)
-    - Cross-Site Scripting (A03:2021)
-    - Path Traversal (A01:2021)
-    - Command Injection (A03:2021)
-    - Insecure Deserialization (A08:2021)
-    - And more...
+  <Step title="Scoring Agent">
+    **Risk assessment and prioritization**
+    
+    - Assigns CVSS scores based on real exploitability
+    - Calculates attack vectors and complexity
+    - Considers authentication requirements
+    - Evaluates business impact context
   </Step>
   
-  <Step title="Exploitability Ranking">
-    Risk scoring based on real-world impact:
-    - **Reachability**: Is the code path actually executable?
-    - **User Input**: Is user-controlled data involved?
-    - **Security Controls**: Are there existing mitigations?
-    - **Impact**: What's the potential damage?
-  </Step>
-  
-  <Step title="Patch Generation">
-    Context-aware fixes minimize code churn:
-    - Preserve code style and formatting
-    - Maintain existing test compatibility
-    - Generate idiomatic language patterns
-    - Include explanatory comments
-  </Step>
-  
-  <Step title="Delivery & Integration">
-    Results delivered where you work:
-    - Inline annotations in IDE
-    - Terminal output with color-coded severity
-    - Dashboard visualizations and trends
-    - CI/CD status checks and PR comments
+  <Step title="Remediation Agent">
+    **Automated vulnerability fixing**
+    
+    - Generates production-ready patches with precise line boundaries
+    - Understands code style and project conventions
+    - Creates minimal, surgical fixes
+    - Provides detailed fix explanations
   </Step>
 </Steps>
 
-## Scanning Modes
-
-### Inline Scanning
-
-Real-time vulnerability detection as you code:
-
-```bash
-vulnzap watch
-```
-
-**How it works:**
-1. VulnZap monitors file system changes
-2. On save, analyzes the diff (not full file)
-3. Highlights issues inline in your editor
-4. Suggests fixes in real-time
-
-**Best for:**
-- Active development
-- Immediate feedback loops
-- Catching issues before commit
-
 <Info>
-  Inline scanning only analyzes changed lines, making it extremely fast (typically <100ms).
+  All agents coordinate through Redis-backed memory, enabling parallel processing and intelligent task delegation.
 </Info>
 
-### Repository Scanning
+## MCP Tools for AI Agents
 
-Deep analysis of your entire codebase:
+VulnZap provides 4 MCP tools that enable AI agents to perform vulnerability scanning during development:
+
+### 1. vulnzap.scan_diff
+
+Fast, incremental, non-blocking scan on git diff:
 
 ```bash
-vulnzap scan
+# Fire-and-forget: call and continue coding
+vulnzap.scan_diff({ repo: ".", since: "HEAD" })
 ```
 
-**How it works:**
-1. Recursively analyzes all supported files
-2. Builds complete call graphs
-3. Ranks findings by exploitability
-4. Generates comprehensive report
+**Returns:**
+- `scan_id` for polling
+- ETA and file count
+- Runs in background
 
-**Best for:**
-- Security audits
-- Pre-deployment checks
-- Baseline security posture
+### 2. vulnzap.status
 
-### CI/CD Scanning
+Poll for scan results:
 
-Automated security gates in your pipeline:
-
-```yaml
-- run: vulnzap scan --fail-on high
+```bash
+# Check scan progress
+vulnzap.status({ scan_id: "vz_91f..." })
+# or
+vulnzap.status({ latest: true })
 ```
 
-**How it works:**
-1. Scans code on every PR or commit
-2. Compares against baseline
-3. Blocks merge if new high/critical issues found
-4. Posts results as PR comments
+**Returns:**
+- `ready: true` when complete
+- List of vulnerabilities found
+- Severity counts
 
-**Best for:**
-- Preventing regression
-- Enforcing security standards
-- Team-wide protection
+### 3. vulnzap.full_scan
 
-### Agent-Aware Scanning
+Baseline scan for entire repository:
 
-Specialized scanning for AI-generated code:
+```bash
+# Deep scan before push/deploy
+vulnzap.full_scan({ repo: ".", mode: "baseline" })
+```
 
-**How it works:**
-1. VulnZap receives agent prompts via MCP
-2. Analyzes generated diffs before application
-3. Blocks insecure changes in real-time
-4. Suggests secure alternatives to the agent
+**Takes:** 5-7 minutes average  
+**Use:** Before serious push or deploy
 
-**Best for:**
-- AI coding assistants (Cursor, Windsurf, Cline)
-- Autonomous code generation
-- Agentic workflows
+### 4. vulnzap.report
 
-<Warning>
-  Agent-aware scanning requires MCP protocol integration. See [IDE Integration](/features/ide-integration) for setup.
-</Warning>
+Human-readable markdown report:
 
-## Detection Methodology
+```bash
+# Generate report for PRs
+vulnzap.report({ scan_id: "vz_91f...", format: "md" })
+```
 
-### Data Flow Analysis
+**Returns:** Markdown summary for PR descriptions
 
-VulnZap tracks data from sources to sinks:
+## Agent Workflow
+
+Recommended workflow for AI coding agents:
+
+<Steps>
+  <Step title="Startup Check">
+    Call `vulnzap.status({ latest: true })` to check for existing issues
+  </Step>
+  
+  <Step title="While Coding">
+    At checkpoints, call `vulnzap.scan_diff` and continue coding
+  </Step>
+  
+  <Step title="Poll Status">
+    Periodically call `vulnzap.status` with scan_id
+  </Step>
+  
+  <Step title="Fix Issues">
+    If issues found, fix them and call `vulnzap.scan_diff` again
+  </Step>
+  
+  <Step title="Before Push">
+    Call `vulnzap.full_scan` once, poll until complete
+  </Step>
+  
+  <Step title="Generate Report">
+    Call `vulnzap.report` to attach to PRs
+  </Step>
+</Steps>
+
+<Info>
+  Scans are non-blocking. Agents can continue coding while scans run in the background.
+</Info>
+
+## How Faraday Works
+
+Each agent leverages advanced language models to:
+- **Understand code intent** beyond syntax
+- **Reason about business logic** and security implications
+- **Detect novel patterns** that rule-based scanners miss
+- **Provide context-aware recommendations**
+
+### Multi-Layer Analysis
+
+**Example: SQL Injection Detection**
 
 ```javascript
-// Source: User input
+// Traditional scanner: Flags as vulnerability (may be false positive)
+// Faraday: Multi-agent verification
+
 const userId = req.params.id;
-
-// Flow: No sanitization
 const query = `SELECT * FROM users WHERE id = ${userId}`;
-
-// Sink: Database execution
-db.execute(query); // ❌ VulnZap flags SQL injection
+db.execute(query);
 ```
 
-**Detected pattern:**
-- **Source**: `req.params.id` (user-controlled)
-- **Flow**: Direct string interpolation (no sanitization)
-- **Sink**: `db.execute()` (SQL execution)
+**Vulnerability Scanner Agent:**
+- Detects SQL injection pattern
+- Identifies source: `req.params.id` (user-controlled)
+- Identifies sink: `db.execute()` (SQL execution)
 
-**Suggested fix:**
+**Context Validator Agent:**
+- Uses `grep` to find input validation
+- Checks for ORM usage
+- Verifies if parameterization exists elsewhere
+- Confirms: Real vulnerability (no protections found)
+
+**Scoring Agent:**
+- User-reachable: Yes
+- Authentication required: No
+- Impact: High (data exfiltration)
+- **Score: CRITICAL**
+
+**Remediation Agent:**
+- Generates fix:
 
 ```javascript
 const userId = req.params.id;
 const query = 'SELECT * FROM users WHERE id = ?';
-db.execute(query, [userId]); // ✅ Parameterized query
+db.execute(query, [userId]); // ✅ Secure
 ```
 
-### Control Flow Analysis
+### Multi-File Vulnerability Detection
 
-Understanding execution paths for accurate detection:
+Faraday traces data flow across file boundaries:
 
-```python
-def process_file(filename):
-    if filename.startswith('/safe/'):
-        # Safe path - no warning
-        with open(filename) as f:
-            return f.read()
-    else:
-        # Unsafe path - VulnZap flags path traversal
-        with open(f'/data/{filename}') as f:  # ❌
-            return f.read()
-```
-
-VulnZap understands the control flow and only flags the vulnerable branch.
-
-### Agent Context Understanding
-
-For AI-generated code, VulnZap analyzes the prompt context:
-
-**Example prompt:**
-> "Create a user login endpoint that checks credentials against the database"
-
-**Generated code:**
 ```javascript
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  const query = `SELECT * FROM users WHERE username='${username}' 
-                 AND password='${password}'`;
-  db.query(query, (err, result) => {
-    // ...
-  });
-});
+// auth.js
+export function getToken(req) {
+  return req.headers.authorization; // Source
+}
+
+// middleware.js  
+import { getToken } from './auth.js';
+export function validateUser(req) {
+  const token = getToken(req); // Flow
+  return jwt.verify(token, secret); // Sink - but safe
+}
+
+// Faraday understands the complete flow and validates safety
 ```
 
-**VulnZap analysis:**
-- Recognizes authentication context from prompt
-- Identifies SQL injection vulnerability
-- Notes lack of password hashing
-- Suggests secure implementation with parameterized queries + bcrypt
+Traditional scanners analyze files in isolation. Faraday's agents understand cross-file relationships.
 
 ## Exploitability Ranking
 
@@ -326,19 +323,40 @@ function getUser(id) {
 }
 ```
 
-## Performance
+## Performance & Results
 
-VulnZap is designed for speed:
+### Scan Performance
 
-| Scan Type | Typical Speed | Caching |
-|-----------|---------------|---------|
-| Inline (diff only) | <100ms | File-level |
-| Full file | <500ms | AST-level |
-| Full repo (1000 files) | <30s | Incremental |
-| CI/CD (changed files) | <10s | Git-aware |
+| Metric | Faraday | Traditional Scanners |
+|--------|---------|---------------------|
+| **Full repo scan** | 5-7 minutes avg | 30-120 minutes |
+| **False positive rate** | &lt;5% | 20-40% |
+| **Novel pattern detection** | ✅ Yes | ❌ No |
+| **Automated remediation** | ✅ Working patches | ⚠️ Suggestions only |
+| **Multi-file analysis** | ✅ Complete flow | ⚠️ Limited |
+
+### Real-World Impact
+
+**Traditional Scanner:**
+```
+Scan complete: 1,247 findings
+├─ 892 false positives (71%)
+├─ 312 low severity (25%)
+└─ 43 actionable (4%)
+Developer time: 8 hours triaging
+```
+
+**Faraday:**
+```
+Scan complete: 67 findings
+├─ 3 false positives (4%)
+├─ 52 with automated patches (78%)
+└─ 67 actionable (100%)
+Developer time: 45 minutes reviewing + applying fixes
+```
 
 <Info>
-  Incremental scanning only analyzes changed files, dramatically reducing CI/CD scan times.
+  Faraday's Context Validator Agent eliminates 90%+ of false positives by verifying findings against actual code evidence.
 </Info>
 
 ## Privacy & Security
